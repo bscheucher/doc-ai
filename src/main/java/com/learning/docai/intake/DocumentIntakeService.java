@@ -31,6 +31,7 @@ import com.learning.docai.api.DocAiException;
 import com.learning.docai.api.ErrorType;
 import com.learning.docai.config.IntakeProperties;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -42,16 +43,13 @@ import lombok.extern.slf4j.Slf4j;
  * valid input (a 14400 pt page, a PNG declaring huge dimensions) would allocate gigabytes.
  */
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class DocumentIntakeService {
 
     private static final float POINTS_PER_INCH = 72f;
 
     private final IntakeProperties properties;
-
-    public DocumentIntakeService(IntakeProperties properties) {
-        this.properties = properties;
-    }
 
     public PageImages toPageImages(MultipartFile file) {
         if (file == null || file.isEmpty()) {

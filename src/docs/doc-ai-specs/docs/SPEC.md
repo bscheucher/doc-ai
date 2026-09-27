@@ -297,7 +297,7 @@ spring-boot-starter-web, -validation, -actuator, -security, -oauth2-resource-ser
 spring-ai-bom 1.1.x with spring-ai-starter-model-anthropic and spring-ai-starter-model-ollama;
 org.apache.pdfbox:pdfbox 3.0.x; springdoc-openapi-starter-webmvc-ui (version compatible with
 Boot 3.5); micrometer (via actuator); org.projectlombok:lombok (version from the Boot BOM,
-`compileOnly` + `annotationProcessor`) - used for `@Slf4j` only, see §10.
+`compileOnly` + `annotationProcessor`) - `@Slf4j` and `@RequiredArgsConstructor` only, see §10.
 Test: spring-boot-starter-test, spring-security-test.
 
 ## 10. Observability
@@ -308,10 +308,13 @@ Test: spring-boot-starter-test, spring-security-test.
   `docai.model.tokens` counter tagged `direction` (input/output), `model`.
 - OpenAPI at `/v3/api-docs`, Swagger UI at `/swagger-ui.html` (disabled in `prod`).
 - Loggers are declared with Lombok's `@Slf4j` on the class, giving a `log` field, to match the
-  company standard. SLF4J over Boot's default Logback backend; Lombok is used for this and
-  nothing else - models stay Java records (§9, code conventions). This is a declaration style
+  company standard. SLF4J over Boot's default Logback backend. This is a declaration style
   only and does not relax the rule that document content, extracted values, names, SVNR and
   participant hints are never logged.
+- Lombok's use is limited to `@Slf4j` and `@RequiredArgsConstructor` (constructor injection of
+  `final` dependencies, per the company standard). Value-type annotations - `@Data`, `@Value`,
+  `@Builder`, `@Getter`/`@Setter` - are not used: DTOs, extraction models and
+  `@ConfigurationProperties` stay Java records (§9, code conventions).
 
 ## 11. Testing requirements
 
