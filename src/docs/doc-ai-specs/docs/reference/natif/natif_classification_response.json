@@ -1,0 +1,30 @@
+{
+  "processing_id": "27a30244-175d-4f44-bc4e-10edaa78e3c3",
+  "workflow_id": "ff375187-66f2-4694-b291-77f19b0f4110",
+  "workflow_name": "Abwesenheiten Classifier",
+  "available_results": [
+    "classifications",
+    "ocr",
+    "page-images",
+    "thumbnail",
+    "pdf",
+    "hocr"
+  ],
+  "classifications": {
+    "schema_version": 1,
+    "selected": {
+      "value": "Krankenstaende",
+      "confidence": 0.9710000157356262
+    },
+    "options": [
+      {
+        "value": "Krankenstaende",
+        "confidence": 0.9710000157356262
+      },
+      {
+        "value": "Zeitbestaetigungen",
+        "confidence": 0.028999999165534973
+      }
+    ]
+  }
+}

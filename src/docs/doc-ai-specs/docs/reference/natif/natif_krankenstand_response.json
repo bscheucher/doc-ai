@@ -1,0 +1,107 @@
+{
+  "processing_id": "397aadd9-c17b-43fc-aecd-7400e7f87e49",
+  "workflow_id": "13d70d65-b693-4ba3-8be3-a547c335f0cd",
+  "workflow_name": "Abwesenheiten",
+  "available_results": [
+    "extractions",
+    "ocr",
+    "page-images",
+    "thumbnail",
+    "pdf",
+    "hocr"
+  ],
+  "extractions": {
+    "schema_version": 1,
+    "document_type": "custom_extraction",
+    "vorname": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.9982378482818604,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 33
+        }
+      ],
+      "value": "Elena"
+    },
+    "familienname": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.9922869205474854,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 48
+        }
+      ],
+      "value": "Fischer"
+    },
+    "krankenstandsadresse": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.9995107054710388,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 58
+        },
+        {
+          "page_num": 1,
+          "bbox_id": 5
+        },
+        {
+          "page_num": 1,
+          "bbox_id": 28
+        },
+        {
+          "page_num": 1,
+          "bbox_id": 27
+        }
+      ],
+      "value": "Testgasse 3 1110 Wien"
+    },
+    "arbeitsunfaehig_von": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.996040940284729,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 81
+        }
+      ],
+      "value": "2026-03-01"
+    },
+    "letzter_tag_der_arbeitsunfaehigkeit": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.6423816680908203,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 85
+        }
+      ],
+      "value": "2026-03-05"
+    },
+    "grund_der_arbeitsunfaehigkeit": null,
+    "ausstellungsdatum": null,
+    "versicherungsnummer": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.998782217502594,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 32
+        },
+        {
+          "page_num": 1,
+          "bbox_id": 47
+        }
+      ],
+      "value": 1121300795
+    }
+  }
+}

@@ -1,0 +1,1642 @@
+{
+  "processing_id": "e2c5b23a-f8c2-48ba-8ff2-78c7c485d804",
+  "workflow_id": "7a03c48f-4844-4714-8623-c292d1b1d532",
+  "workflow_name": "AMS",
+  "available_results": [
+    "extractions",
+    "ocr",
+    "page-images",
+    "thumbnail",
+    "pdf",
+    "hocr"
+  ],
+  "extractions": {
+    "schema_version": 1,
+    "document_type": "custom_extraction",
+    "vorname": null,
+    "nachname": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.6308709383010864,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 31
+        }
+      ],
+      "value": "Ahmed"
+    },
+    "geburtsdatum": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.832611083984375,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 48
+        }
+      ],
+      "value": "1985-07-13"
+    },
+    "sv_nr": null,
+    "kostentraeger": null,
+    "fachlich": [
+      {
+        "kompetenz": null,
+        "score": {
+          "validation_problem": false,
+          "note": "",
+          "confidence": 0.9913474917411804,
+          "bbox_refs": [
+            {
+              "page_num": 2,
+              "bbox_id": 11
+            }
+          ],
+          "value": 95
+        }
+      },
+      {
+        "kompetenz": {
+          "validation_problem": false,
+          "note": "",
+          "confidence": 0.7185068726539612,
+          "bbox_refs": [
+            {
+              "page_num": 2,
+              "bbox_id": 30
+            },
+            {
+              "page_num": 2,
+              "bbox_id": 57
+            }
+          ],
+          "value": "Büro Verwaltung"
+        },
+        "score": {
+          "validation_problem": false,
+          "note": "",
+          "confidence": 0.9917671084403992,
+          "bbox_refs": [
+            {
+              "page_num": 2,
+              "bbox_id": 6
+            }
+          ],
+          "value": 70
+        }
+      },
+      {
+        "kompetenz": {
+          "validation_problem": false,
+          "note": "",
+          "confidence": 0.8406205773353577,
+          "bbox_refs": [
+            {
+              "page_num": 2,
+              "bbox_id": 76
+            }
+          ],
+          "value": "Bilanzbuchhalterprüfung"
+        },
+        "score": {
+          "validation_problem": false,
+          "note": "",
+          "confidence": 0.9902025461196899,
+          "bbox_refs": [
+            {
+              "page_num": 2,
+              "bbox_id": 23
+            }
+          ],
+          "value": 100
+        }
+      },
+      {
+        "kompetenz": {
+          "validation_problem": false,
+          "note": "",
+          "confidence": 0.7353033423423767,
+          "bbox_refs": [
+            {
+              "page_num": 2,
+              "bbox_id": 62
+            }
+          ],
+          "value": "Berufserfahrung"
+        },
+        "score": {
+          "validation_problem": false,
+          "note": "",
+          "confidence": 0.9725993275642395,
+          "bbox_refs": [
+            {
+              "page_num": 2,
+              "bbox_id": 5
+            }
+          ],
+          "value": 90
+        }
+      }
+    ],
+    "ueberfachlich": [
+      {
+        "kompetenz": null,
+        "score": null
+      },
+      {
+        "kompetenz": null,
+        "score": null
+      },
+      {
+        "kompetenz": null,
+        "score": null
+      }
+    ],
+    "voraussetzung": [],
+    "suchbegriffe": [],
+    "ams_6_steller": [],
+    "teil_der_berufsobergruppe": [],
+    "zertifikate": [],
+    "interessengebiete": [],
+    "pin_code": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.5621459285418192,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 17
+        },
+        {
+          "page_num": 1,
+          "bbox_id": 20
+        },
+        {
+          "page_num": 1,
+          "bbox_id": 30
+        }
+      ],
+      "value": "AMSWienA1B2C3"
+    },
+    "tagesdatum": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.9779276847839355,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 51
+        }
+      ],
+      "value": "2026-03-15"
+    }
+  },
+  "ocr": {
+    "pages": [
+      {
+        "width": 1819,
+        "height": 2573,
+        "bboxes": [
+          {
+            "id": 1,
+            "x1": 570,
+            "y1": 2439,
+            "x2": 596,
+            "y2": 2461,
+            "text": "to",
+            "text_entropy": 0.057281494140625
+          },
+          {
+            "id": 2,
+            "x1": 1621,
+            "y1": 2437,
+            "x2": 1655,
+            "y2": 2464,
+            "text": "to",
+            "text_entropy": 0.0084381103515625
+          },
+          {
+            "id": 3,
+            "x1": 1300,
+            "y1": 1018,
+            "x2": 1347,
+            "y2": 1050,
+            "text": "88",
+            "text_entropy": 0.00004184246063232422
+          },
+          {
+            "id": 4,
+            "x1": 1300,
+            "y1": 1176,
+            "x2": 1347,
+            "y2": 1208,
+            "text": "75",
+            "text_entropy": -0.00019240379333496094
+          },
+          {
+            "id": 5,
+            "x1": 1177,
+            "y1": 2105,
+            "x2": 1224,
+            "y2": 2137,
+            "text": "78",
+            "text_entropy": -0.00014483928680419922
+          },
+          {
+            "id": 6,
+            "x1": 1300,
+            "y1": 937,
+            "x2": 1350,
+            "y2": 969,
+            "text": "95",
+            "text_entropy": -0.00008934736251831055
+          },
+          {
+            "id": 7,
+            "x1": 1316,
+            "y1": 1521,
+            "x2": 1366,
+            "y2": 1553,
+            "text": "90",
+            "text_entropy": 0.0013399124145507812
+          },
+          {
+            "id": 8,
+            "x1": 1316,
+            "y1": 1599,
+            "x2": 1366,
+            "y2": 1631,
+            "text": "85",
+            "text_entropy": 0.00010728836059570312
+          },
+          {
+            "id": 9,
+            "x1": 1300,
+            "y1": 1098,
+            "x2": 1347,
+            "y2": 1128,
+            "text": "82",
+            "text_entropy": 0.006053924560546875
+          },
+          {
+            "id": 10,
+            "x1": 1316,
+            "y1": 1682,
+            "x2": 1364,
+            "y2": 1712,
+            "text": "80",
+            "text_entropy": 0.01092529296875
+          },
+          {
+            "id": 11,
+            "x1": 1177,
+            "y1": 2025,
+            "x2": 1224,
+            "y2": 2055,
+            "text": "92",
+            "text_entropy": 0.0132904052734375
+          },
+          {
+            "id": 12,
+            "x1": 1657,
+            "y1": 2437,
+            "x2": 1714,
+            "y2": 2464,
+            "text": "PDF",
+            "text_entropy": 0.011932373046875
+          },
+          {
+            "id": 13,
+            "x1": 663,
+            "y1": 2439,
+            "x2": 710,
+            "y2": 2461,
+            "text": "API",
+            "text_entropy": 0.0869140625
+          },
+          {
+            "id": 14,
+            "x1": 641,
+            "y1": 360,
+            "x2": 715,
+            "y2": 392,
+            "text": "Abdi",
+            "text_entropy": 0.025177001953125
+          },
+          {
+            "id": 15,
+            "x1": 1283,
+            "y1": 2437,
+            "x2": 1352,
+            "y2": 2466,
+            "text": "using",
+            "text_entropy": 0.027191162109375
+          },
+          {
+            "id": 16,
+            "x1": 217,
+            "y1": 2441,
+            "x2": 260,
+            "y2": 2461,
+            "text": "our",
+            "text_entropy": 0.1123046875
+          },
+          {
+            "id": 17,
+            "x1": 1371,
+            "y1": 360,
+            "x2": 1449,
+            "y2": 392,
+            "text": "AMS",
+            "text_entropy": 0.1397705078125
+          },
+          {
+            "id": 18,
+            "x1": 1300,
+            "y1": 854,
+            "x2": 1411,
+            "y2": 896,
+            "text": "Score",
+            "text_entropy": 0.0222015380859375
+          },
+          {
+            "id": 19,
+            "x1": 1177,
+            "y1": 1942,
+            "x2": 1288,
+            "y2": 1984,
+            "text": "Score",
+            "text_entropy": 0.0111541748046875
+          },
+          {
+            "id": 20,
+            "x1": 1458,
+            "y1": 360,
+            "x2": 1541,
+            "y2": 392,
+            "text": "Wien",
+            "text_entropy": 0.035125732421875
+          },
+          {
+            "id": 21,
+            "x1": 603,
+            "y1": 2439,
+            "x2": 660,
+            "y2": 2461,
+            "text": "PDF",
+            "text_entropy": 0.035308837890625
+          },
+          {
+            "id": 22,
+            "x1": 1314,
+            "y1": 1436,
+            "x2": 1423,
+            "y2": 1475,
+            "text": "Score",
+            "text_entropy": 0.040008544921875
+          },
+          {
+            "id": 23,
+            "x1": 1537,
+            "y1": 2437,
+            "x2": 1619,
+            "y2": 2464,
+            "text": "HTML",
+            "text_entropy": 0.007152557373046875
+          },
+          {
+            "id": 24,
+            "x1": 113,
+            "y1": 2437,
+            "x2": 215,
+            "y2": 2466,
+            "text": "Explore",
+            "text_entropy": 0.1448974609375
+          },
+          {
+            "id": 25,
+            "x1": 153,
+            "y1": 519,
+            "x2": 188,
+            "y2": 551,
+            "text": "SV",
+            "text_entropy": 0.10888671875
+          },
+          {
+            "id": 26,
+            "x1": 192,
+            "y1": 519,
+            "x2": 208,
+            "y2": 551,
+            "text": "-",
+            "text_entropy": 0.10888671875
+          },
+          {
+            "id": 27,
+            "x1": 210,
+            "y1": 519,
+            "x2": 243,
+            "y2": 551,
+            "text": "Nr",
+            "text_entropy": 0.10888671875
+          },
+          {
+            "id": 28,
+            "x1": 245,
+            "y1": 519,
+            "x2": 256,
+            "y2": 551,
+            "text": ":",
+            "text_entropy": 0.10888671875
+          },
+          {
+            "id": 29,
+            "x1": 490,
+            "y1": 2439,
+            "x2": 568,
+            "y2": 2461,
+            "text": "HTML",
+            "text_entropy": 0.003246307373046875
+          },
+          {
+            "id": 30,
+            "x1": 1371,
+            "y1": 417,
+            "x2": 1508,
+            "y2": 451,
+            "text": "A1B2C3",
+            "text_entropy": 0.0955810546875
+          },
+          {
+            "id": 31,
+            "x1": 641,
+            "y1": 462,
+            "x2": 757,
+            "y2": 491,
+            "text": "Ahmed",
+            "text_entropy": 0.10845947265625
+          },
+          {
+            "id": 32,
+            "x1": 1188,
+            "y1": 2437,
+            "x2": 1281,
+            "y2": 2461,
+            "text": "Printed",
+            "text_entropy": 0.003993988037109375
+          },
+          {
+            "id": 33,
+            "x1": 123,
+            "y1": 1436,
+            "x2": 324,
+            "y2": 1482,
+            "text": "Kompetenz",
+            "text_entropy": 0.145751953125
+          },
+          {
+            "id": 34,
+            "x1": 123,
+            "y1": 854,
+            "x2": 326,
+            "y2": 898,
+            "text": "Kompetenz",
+            "text_entropy": 0.006298065185546875
+          },
+          {
+            "id": 35,
+            "x1": 123,
+            "y1": 1942,
+            "x2": 329,
+            "y2": 1986,
+            "text": "Kompetenz",
+            "text_entropy": 0.0081634521484375
+          },
+          {
+            "id": 36,
+            "x1": 127,
+            "y1": 935,
+            "x2": 326,
+            "y2": 974,
+            "text": "Buchhaltung",
+            "text_entropy": 0.036651611328125
+          },
+          {
+            "id": 37,
+            "x1": 125,
+            "y1": 1096,
+            "x2": 331,
+            "y2": 1135,
+            "text": "Bilanzierung",
+            "text_entropy": 0.0880126953125
+          },
+          {
+            "id": 38,
+            "x1": 641,
+            "y1": 419,
+            "x2": 793,
+            "y2": 449,
+            "text": "Abdullahi",
+            "text_entropy": 0.09796142578125
+          },
+          {
+            "id": 39,
+            "x1": 106,
+            "y1": 715,
+            "x2": 357,
+            "y2": 761,
+            "text": "Fachliche",
+            "text_entropy": 0.10028076171875
+          },
+          {
+            "id": 40,
+            "x1": 932,
+            "y1": 419,
+            "x2": 980,
+            "y2": 451,
+            "text": "PIN",
+            "text_entropy": 0.148193359375
+          },
+          {
+            "id": 41,
+            "x1": 984,
+            "y1": 419,
+            "x2": 1000,
+            "y2": 451,
+            "text": "-",
+            "text_entropy": 0.148193359375
+          },
+          {
+            "id": 42,
+            "x1": 1002,
+            "y1": 419,
+            "x2": 1084,
+            "y2": 451,
+            "text": "Code",
+            "text_entropy": 0.148193359375
+          },
+          {
+            "id": 43,
+            "x1": 1088,
+            "y1": 419,
+            "x2": 1096,
+            "y2": 451,
+            "text": ":",
+            "text_entropy": 0.148193359375
+          },
+          {
+            "id": 44,
+            "x1": 931,
+            "y1": 478,
+            "x2": 1130,
+            "y2": 517,
+            "text": "Tagesdatum",
+            "text_entropy": 0.094482421875
+          },
+          {
+            "id": 45,
+            "x1": 1135,
+            "y1": 478,
+            "x2": 1144,
+            "y2": 517,
+            "text": ":",
+            "text_entropy": 0.094482421875
+          },
+          {
+            "id": 46,
+            "x1": 153,
+            "y1": 441,
+            "x2": 293,
+            "y2": 470,
+            "text": "Vorname",
+            "text_entropy": 0.01290130615234375
+          },
+          {
+            "id": 47,
+            "x1": 297,
+            "y1": 441,
+            "x2": 308,
+            "y2": 470,
+            "text": ":",
+            "text_entropy": 0.01290130615234375
+          },
+          {
+            "id": 48,
+            "x1": 646,
+            "y1": 580,
+            "x2": 826,
+            "y2": 612,
+            "text": "13.07.1985",
+            "text_entropy": 0.077392578125
+          },
+          {
+            "id": 49,
+            "x1": 104,
+            "y1": 2226,
+            "x2": 445,
+            "y2": 2282,
+            "text": "Suchbegriffe",
+            "text_entropy": 0.14501953125
+          },
+          {
+            "id": 50,
+            "x1": 125,
+            "y1": 1521,
+            "x2": 352,
+            "y2": 1560,
+            "text": "Teamfähigkeit",
+            "text_entropy": 0.10150146484375
+          },
+          {
+            "id": 51,
+            "x1": 1373,
+            "y1": 478,
+            "x2": 1556,
+            "y2": 510,
+            "text": "15.03.2026",
+            "text_entropy": 0.11627197265625
+          },
+          {
+            "id": 52,
+            "x1": 485,
+            "y1": 1299,
+            "x2": 840,
+            "y2": 1355,
+            "text": "Kompetenzen",
+            "text_entropy": 0.010711669921875
+          },
+          {
+            "id": 53,
+            "x1": 123,
+            "y1": 2103,
+            "x2": 360,
+            "y2": 2142,
+            "text": "Digitalisierung",
+            "text_entropy": 0.1474609375
+          },
+          {
+            "id": 54,
+            "x1": 1357,
+            "y1": 2437,
+            "x2": 1496,
+            "y2": 2461,
+            "text": "PDFCrowd",
+            "text_entropy": 0.1436767578125
+          },
+          {
+            "id": 55,
+            "x1": 155,
+            "y1": 360,
+            "x2": 325,
+            "y2": 392,
+            "text": "Nachname",
+            "text_entropy": 0.016754150390625
+          },
+          {
+            "id": 56,
+            "x1": 328,
+            "y1": 360,
+            "x2": 338,
+            "y2": 392,
+            "text": ":",
+            "text_entropy": 0.016754150390625
+          },
+          {
+            "id": 57,
+            "x1": 104,
+            "y1": 1292,
+            "x2": 471,
+            "y2": 1347,
+            "text": "Überfachliche",
+            "text_entropy": 0.007251739501953125
+          },
+          {
+            "id": 58,
+            "x1": 125,
+            "y1": 1176,
+            "x2": 319,
+            "y2": 1208,
+            "text": "Steuerrecht",
+            "text_entropy": 0.06591796875
+          },
+          {
+            "id": 59,
+            "x1": 933,
+            "y1": 358,
+            "x2": 1144,
+            "y2": 394,
+            "text": "Kostenträger",
+            "text_entropy": 0.131103515625
+          },
+          {
+            "id": 60,
+            "x1": 1146,
+            "y1": 358,
+            "x2": 1160,
+            "y2": 394,
+            "text": ":",
+            "text_entropy": 0.131103515625
+          },
+          {
+            "id": 61,
+            "x1": 376,
+            "y1": 717,
+            "x2": 731,
+            "y2": 770,
+            "text": "Kompetenzen",
+            "text_entropy": 0.07305908203125
+          },
+          {
+            "id": 62,
+            "x1": 125,
+            "y1": 2020,
+            "x2": 343,
+            "y2": 2057,
+            "text": "Finanzwesen",
+            "text_entropy": 0.11334228515625
+          },
+          {
+            "id": 63,
+            "x1": 625,
+            "y1": 145,
+            "x2": 1193,
+            "y2": 217,
+            "text": "Kompetenzprofil",
+            "text_entropy": 0.11944580078125
+          },
+          {
+            "id": 64,
+            "x1": 644,
+            "y1": 521,
+            "x2": 732,
+            "y2": 551,
+            "text": "2345",
+            "text_entropy": 0.1392822265625
+          },
+          {
+            "id": 65,
+            "x1": 736,
+            "y1": 521,
+            "x2": 848,
+            "y2": 551,
+            "text": "130785",
+            "text_entropy": 0.1392822265625
+          },
+          {
+            "id": 66,
+            "x1": 933,
+            "y1": 540,
+            "x2": 1195,
+            "y2": 577,
+            "text": "Dokumententyp",
+            "text_entropy": 0.14794921875
+          },
+          {
+            "id": 67,
+            "x1": 1197,
+            "y1": 540,
+            "x2": 1208,
+            "y2": 577,
+            "text": ":",
+            "text_entropy": 0.14794921875
+          },
+          {
+            "id": 68,
+            "x1": 1368,
+            "y1": 538,
+            "x2": 1672,
+            "y2": 577,
+            "text": "custom_extraction",
+            "text_entropy": 0.0928955078125
+          },
+          {
+            "id": 69,
+            "x1": 266,
+            "y1": 2437,
+            "x2": 381,
+            "y2": 2466,
+            "text": "developer",
+            "text_entropy": 0.142333984375
+          },
+          {
+            "id": 70,
+            "x1": 383,
+            "y1": 2437,
+            "x2": 389,
+            "y2": 2466,
+            "text": "-",
+            "text_entropy": 0.142333984375
+          },
+          {
+            "id": 71,
+            "x1": 391,
+            "y1": 2437,
+            "x2": 478,
+            "y2": 2466,
+            "text": "friendly",
+            "text_entropy": 0.142333984375
+          },
+          {
+            "id": 72,
+            "x1": 123,
+            "y1": 1680,
+            "x2": 431,
+            "y2": 1719,
+            "text": "Selbstorganisation",
+            "text_entropy": 0.019287109375
+          },
+          {
+            "id": 73,
+            "x1": 106,
+            "y1": 1803,
+            "x2": 573,
+            "y2": 1858,
+            "text": "Interessengebiete",
+            "text_entropy": 0.131103515625
+          },
+          {
+            "id": 74,
+            "x1": 157,
+            "y1": 578,
+            "x2": 392,
+            "y2": 610,
+            "text": "Geburtsdatum",
+            "text_entropy": 0.147705078125
+          },
+          {
+            "id": 75,
+            "x1": 396,
+            "y1": 578,
+            "x2": 405,
+            "y2": 610,
+            "text": ":",
+            "text_entropy": 0.147705078125
+          },
+          {
+            "id": 76,
+            "x1": 127,
+            "y1": 1015,
+            "x2": 476,
+            "y2": 1054,
+            "text": "Personalverrechnung",
+            "text_entropy": 0.1475830078125
+          },
+          {
+            "id": 77,
+            "x1": 125,
+            "y1": 1599,
+            "x2": 497,
+            "y2": 1631,
+            "text": "Kommunikationsstärke",
+            "text_entropy": 0.1396484375
+          }
+        ],
+        "fulltext": "Kompetenzprofil\nKostenträger:\nPIN-Code:\nTagesdatum:\nDokumententyp:\nNachname:\nAbdi\nAbdullahi\nAhmed\nAMS Wien\nA1B2C3\n15.03.2026\ncustom_extraction\nVorname:\nSV-Nr:\nGeburtsdatum:\n2345 130785\n13.07.1985\nFachliche Kompetenzen\nKompetenz\nBuchhaltung\nScore\n95\nPersonalverrechnung\n88\nBilanzierung\n82\nSteuerrecht\n75\nÜberfachliche Kompetenzen\nKompetenz\nTeamfähigkeit\nScore\n90\nKommunikationsstärke\n85\nSelbstorganisation\n80\nInteressengebiete\nKompetenz\nFinanzwesen\nScore\n92\nDigitalisierung\n78\nSuchbegriffe\nExplore our developer-friendly HTML to PDF API\nPrinted using PDFCrowd\nHTML to PDF"
+      },
+      {
+        "width": 1819,
+        "height": 2573,
+        "bboxes": [
+          {
+            "id": 1,
+            "x1": 570,
+            "y1": 2439,
+            "x2": 596,
+            "y2": 2461,
+            "text": "to",
+            "text_entropy": 0.06536865234375
+          },
+          {
+            "id": 2,
+            "x1": 1269,
+            "y1": 353,
+            "x2": 1309,
+            "y2": 385,
+            "text": "85",
+            "text_entropy": 0.030181884765625
+          },
+          {
+            "id": 3,
+            "x1": 1267,
+            "y1": 273,
+            "x2": 1309,
+            "y2": 305,
+            "text": "90",
+            "text_entropy": 0.0033092498779296875
+          },
+          {
+            "id": 4,
+            "x1": 1621,
+            "y1": 2437,
+            "x2": 1655,
+            "y2": 2464,
+            "text": "to",
+            "text_entropy": 0.006992340087890625
+          },
+          {
+            "id": 5,
+            "x1": 1482,
+            "y1": 1200,
+            "x2": 1530,
+            "y2": 1232,
+            "text": "90",
+            "text_entropy": 0.0016889572143554688
+          },
+          {
+            "id": 6,
+            "x1": 1447,
+            "y1": 779,
+            "x2": 1494,
+            "y2": 808,
+            "text": "70",
+            "text_entropy": 0.00618743896484375
+          },
+          {
+            "id": 7,
+            "x1": 1364,
+            "y1": 2129,
+            "x2": 1411,
+            "y2": 2159,
+            "text": "88",
+            "text_entropy": 0.0184173583984375
+          },
+          {
+            "id": 8,
+            "x1": 701,
+            "y1": 1200,
+            "x2": 710,
+            "y2": 1236,
+            "text": "(",
+            "text_entropy": 0.09716796875
+          },
+          {
+            "id": 9,
+            "x1": 712,
+            "y1": 1200,
+            "x2": 727,
+            "y2": 1236,
+            "text": "5",
+            "text_entropy": 0.09716796875
+          },
+          {
+            "id": 10,
+            "x1": 732,
+            "y1": 1200,
+            "x2": 748,
+            "y2": 1236,
+            "text": "+",
+            "text_entropy": 0.09716796875
+          },
+          {
+            "id": 11,
+            "x1": 1447,
+            "y1": 698,
+            "x2": 1496,
+            "y2": 728,
+            "text": "95",
+            "text_entropy": 0.000008702278137207031
+          },
+          {
+            "id": 12,
+            "x1": 1361,
+            "y1": 2049,
+            "x2": 1411,
+            "y2": 2078,
+            "text": "95",
+            "text_entropy": 0.0025787353515625
+          },
+          {
+            "id": 13,
+            "x1": 210,
+            "y1": 476,
+            "x2": 303,
+            "y2": 522,
+            "text": "der",
+            "text_entropy": 0.03558349609375
+          },
+          {
+            "id": 14,
+            "x1": 104,
+            "y1": 476,
+            "x2": 198,
+            "y2": 522,
+            "text": "Teil",
+            "text_entropy": 0.0469970703125
+          },
+          {
+            "id": 15,
+            "x1": 426,
+            "y1": 696,
+            "x2": 490,
+            "y2": 728,
+            "text": "und",
+            "text_entropy": 0.0293731689453125
+          },
+          {
+            "id": 16,
+            "x1": 1269,
+            "y1": 195,
+            "x2": 1328,
+            "y2": 224,
+            "text": "100",
+            "text_entropy": 0.0024394989013671875
+          },
+          {
+            "id": 17,
+            "x1": 213,
+            "y1": 776,
+            "x2": 279,
+            "y2": 808,
+            "text": "und",
+            "text_entropy": 0.09918212890625
+          },
+          {
+            "id": 18,
+            "x1": 1657,
+            "y1": 2437,
+            "x2": 1714,
+            "y2": 2464,
+            "text": "PDF",
+            "text_entropy": 0.01476287841796875
+          },
+          {
+            "id": 19,
+            "x1": 663,
+            "y1": 2439,
+            "x2": 710,
+            "y2": 2461,
+            "text": "API",
+            "text_entropy": 0.1158447265625
+          },
+          {
+            "id": 20,
+            "x1": 568,
+            "y1": 1623,
+            "x2": 583,
+            "y2": 1662,
+            "text": "(",
+            "text_entropy": 0.1839599609375
+          },
+          {
+            "id": 21,
+            "x1": 585,
+            "y1": 1623,
+            "x2": 633,
+            "y2": 1662,
+            "text": "BFI",
+            "text_entropy": 0.1839599609375
+          },
+          {
+            "id": 22,
+            "x1": 635,
+            "y1": 1623,
+            "x2": 651,
+            "y2": 1662,
+            "text": ")",
+            "text_entropy": 0.1839599609375
+          },
+          {
+            "id": 23,
+            "x1": 1485,
+            "y1": 1122,
+            "x2": 1551,
+            "y2": 1151,
+            "text": "100",
+            "text_entropy": 0.08758544921875
+          },
+          {
+            "id": 24,
+            "x1": 1409,
+            "y1": 1625,
+            "x2": 1475,
+            "y2": 1655,
+            "text": "100",
+            "text_entropy": 0.1317138671875
+          },
+          {
+            "id": 25,
+            "x1": 1409,
+            "y1": 1706,
+            "x2": 1475,
+            "y2": 1735,
+            "text": "100",
+            "text_entropy": 0.034942626953125
+          },
+          {
+            "id": 26,
+            "x1": 1409,
+            "y1": 1545,
+            "x2": 1477,
+            "y2": 1575,
+            "text": "100",
+            "text_entropy": 0.00555419921875
+          },
+          {
+            "id": 27,
+            "x1": 1283,
+            "y1": 2437,
+            "x2": 1352,
+            "y2": 2466,
+            "text": "using",
+            "text_entropy": 0.0293121337890625
+          },
+          {
+            "id": 28,
+            "x1": 217,
+            "y1": 2441,
+            "x2": 260,
+            "y2": 2461,
+            "text": "our",
+            "text_entropy": 0.08404541015625
+          },
+          {
+            "id": 29,
+            "x1": 1267,
+            "y1": 109,
+            "x2": 1376,
+            "y2": 151,
+            "text": "Score",
+            "text_entropy": 0.1474609375
+          },
+          {
+            "id": 30,
+            "x1": 125,
+            "y1": 776,
+            "x2": 206,
+            "y2": 808,
+            "text": "Büro",
+            "text_entropy": 0.0142059326171875
+          },
+          {
+            "id": 31,
+            "x1": 104,
+            "y1": 1826,
+            "x2": 232,
+            "y2": 1872,
+            "text": "AMS",
+            "text_entropy": 0.00672149658203125
+          },
+          {
+            "id": 32,
+            "x1": 603,
+            "y1": 2439,
+            "x2": 660,
+            "y2": 2461,
+            "text": "PDF",
+            "text_entropy": 0.039459228515625
+          },
+          {
+            "id": 33,
+            "x1": 528,
+            "y1": 1543,
+            "x2": 543,
+            "y2": 1582,
+            "text": "(",
+            "text_entropy": 0.14453125
+          },
+          {
+            "id": 34,
+            "x1": 545,
+            "y1": 1543,
+            "x2": 615,
+            "y2": 1582,
+            "text": "WIFI",
+            "text_entropy": 0.14453125
+          },
+          {
+            "id": 35,
+            "x1": 617,
+            "y1": 1543,
+            "x2": 630,
+            "y2": 1582,
+            "text": ")",
+            "text_entropy": 0.14453125
+          },
+          {
+            "id": 36,
+            "x1": 1447,
+            "y1": 613,
+            "x2": 1558,
+            "y2": 652,
+            "text": "Score",
+            "text_entropy": 0.0252685546875
+          },
+          {
+            "id": 37,
+            "x1": 765,
+            "y1": 1197,
+            "x2": 847,
+            "y2": 1236,
+            "text": "Jahre",
+            "text_entropy": 0.05419921875
+          },
+          {
+            "id": 38,
+            "x1": 849,
+            "y1": 1197,
+            "x2": 865,
+            "y2": 1236,
+            "text": ")",
+            "text_entropy": 0.05419921875
+          },
+          {
+            "id": 39,
+            "x1": 1482,
+            "y1": 1039,
+            "x2": 1591,
+            "y2": 1076,
+            "text": "Score",
+            "text_entropy": 0.054534912109375
+          },
+          {
+            "id": 40,
+            "x1": 1409,
+            "y1": 1462,
+            "x2": 1518,
+            "y2": 1499,
+            "text": "Score",
+            "text_entropy": 0.1202392578125
+          },
+          {
+            "id": 41,
+            "x1": 1361,
+            "y1": 1964,
+            "x2": 1473,
+            "y2": 2000,
+            "text": "Score",
+            "text_entropy": 0.018585205078125
+          },
+          {
+            "id": 42,
+            "x1": 125,
+            "y1": 1703,
+            "x2": 227,
+            "y2": 1735,
+            "text": "ECDL",
+            "text_entropy": 0.005462646484375
+          },
+          {
+            "id": 43,
+            "x1": 1537,
+            "y1": 2437,
+            "x2": 1619,
+            "y2": 2464,
+            "text": "HTML",
+            "text_entropy": 0.00962066650390625
+          },
+          {
+            "id": 44,
+            "x1": 113,
+            "y1": 2437,
+            "x2": 213,
+            "y2": 2466,
+            "text": "Explore",
+            "text_entropy": 0.146484375
+          },
+          {
+            "id": 45,
+            "x1": 490,
+            "y1": 2439,
+            "x2": 568,
+            "y2": 2461,
+            "text": "HTML",
+            "text_entropy": 0.0245208740234375
+          },
+          {
+            "id": 46,
+            "x1": 123,
+            "y1": 2127,
+            "x2": 243,
+            "y2": 2159,
+            "text": "331101",
+            "text_entropy": 0.0771484375
+          },
+          {
+            "id": 47,
+            "x1": 123,
+            "y1": 2046,
+            "x2": 248,
+            "y2": 2078,
+            "text": "331105",
+            "text_entropy": 0.003520965576171875
+          },
+          {
+            "id": 48,
+            "x1": 1188,
+            "y1": 2437,
+            "x2": 1281,
+            "y2": 2461,
+            "text": "Printed",
+            "text_entropy": 0.0038967132568359375
+          },
+          {
+            "id": 49,
+            "x1": 123,
+            "y1": 109,
+            "x2": 326,
+            "y2": 153,
+            "text": "Kompetenz",
+            "text_entropy": 0.0089874267578125
+          },
+          {
+            "id": 50,
+            "x1": 120,
+            "y1": 1037,
+            "x2": 326,
+            "y2": 1080,
+            "text": "Kompetenz",
+            "text_entropy": 0.033111572265625
+          },
+          {
+            "id": 51,
+            "x1": 120,
+            "y1": 1460,
+            "x2": 326,
+            "y2": 1504,
+            "text": "Kompetenz",
+            "text_entropy": 0.03369140625
+          },
+          {
+            "id": 52,
+            "x1": 120,
+            "y1": 613,
+            "x2": 329,
+            "y2": 657,
+            "text": "Kompetenz",
+            "text_entropy": 0.1455078125
+          },
+          {
+            "id": 53,
+            "x1": 245,
+            "y1": 1826,
+            "x2": 266,
+            "y2": 1872,
+            "text": "6",
+            "text_entropy": 0.09381103515625
+          },
+          {
+            "id": 54,
+            "x1": 272,
+            "y1": 1826,
+            "x2": 293,
+            "y2": 1872,
+            "text": "-",
+            "text_entropy": 0.09381103515625
+          },
+          {
+            "id": 55,
+            "x1": 299,
+            "y1": 1826,
+            "x2": 453,
+            "y2": 1872,
+            "text": "Steller",
+            "text_entropy": 0.09381103515625
+          },
+          {
+            "id": 56,
+            "x1": 120,
+            "y1": 1964,
+            "x2": 324,
+            "y2": 2005,
+            "text": "Kompetenz",
+            "text_entropy": 0.11163330078125
+          },
+          {
+            "id": 57,
+            "x1": 281,
+            "y1": 776,
+            "x2": 468,
+            "y2": 813,
+            "text": "Verwaltung",
+            "text_entropy": 0.1265869140625
+          },
+          {
+            "id": 58,
+            "x1": 229,
+            "y1": 1703,
+            "x2": 395,
+            "y2": 1735,
+            "text": "Advanced",
+            "text_entropy": 0.11553955078125
+          },
+          {
+            "id": 59,
+            "x1": 99,
+            "y1": 1320,
+            "x2": 369,
+            "y2": 1366,
+            "text": "Zertifikate",
+            "text_entropy": 0.14794921875
+          },
+          {
+            "id": 60,
+            "x1": 1357,
+            "y1": 2437,
+            "x2": 1496,
+            "y2": 2461,
+            "text": "PDFCrowd",
+            "text_entropy": 0.1436767578125
+          },
+          {
+            "id": 61,
+            "x1": 497,
+            "y1": 696,
+            "x2": 753,
+            "y2": 735,
+            "text": "Steuerberatung",
+            "text_entropy": 0.10528564453125
+          },
+          {
+            "id": 62,
+            "x1": 125,
+            "y1": 1197,
+            "x2": 388,
+            "y2": 1236,
+            "text": "Berufserfahrung",
+            "text_entropy": 0.048492431640625
+          },
+          {
+            "id": 63,
+            "x1": 261,
+            "y1": 2127,
+            "x2": 425,
+            "y2": 2159,
+            "text": "Buchhalter",
+            "text_entropy": 0.14794921875
+          },
+          {
+            "id": 64,
+            "x1": 427,
+            "y1": 2127,
+            "x2": 434,
+            "y2": 2159,
+            "text": "/",
+            "text_entropy": 0.14794921875
+          },
+          {
+            "id": 65,
+            "x1": 436,
+            "y1": 2127,
+            "x2": 461,
+            "y2": 2159,
+            "text": "in",
+            "text_entropy": 0.14794921875
+          },
+          {
+            "id": 66,
+            "x1": 127,
+            "y1": 351,
+            "x2": 409,
+            "y2": 390,
+            "text": "Lohnverrechnung",
+            "text_entropy": 0.1019287109375
+          },
+          {
+            "id": 67,
+            "x1": 125,
+            "y1": 696,
+            "x2": 416,
+            "y2": 735,
+            "text": "Rechnungswesen",
+            "text_entropy": 0.02813720703125
+          },
+          {
+            "id": 68,
+            "x1": 393,
+            "y1": 1197,
+            "x2": 689,
+            "y2": 1236,
+            "text": "Rechnungswesen",
+            "text_entropy": 0.08978271484375
+          },
+          {
+            "id": 69,
+            "x1": 312,
+            "y1": 474,
+            "x2": 791,
+            "y2": 532,
+            "text": "Berufsobergruppe",
+            "text_entropy": 0.10791015625
+          },
+          {
+            "id": 70,
+            "x1": 101,
+            "y1": 899,
+            "x2": 561,
+            "y2": 955,
+            "text": "Voraussetzungen",
+            "text_entropy": 0.039886474609375
+          },
+          {
+            "id": 71,
+            "x1": 266,
+            "y1": 2437,
+            "x2": 381,
+            "y2": 2466,
+            "text": "developer",
+            "text_entropy": 0.1424560546875
+          },
+          {
+            "id": 72,
+            "x1": 383,
+            "y1": 2437,
+            "x2": 389,
+            "y2": 2466,
+            "text": "-",
+            "text_entropy": 0.1424560546875
+          },
+          {
+            "id": 73,
+            "x1": 391,
+            "y1": 2437,
+            "x2": 478,
+            "y2": 2466,
+            "text": "friendly",
+            "text_entropy": 0.1424560546875
+          },
+          {
+            "id": 74,
+            "x1": 127,
+            "y1": 273,
+            "x2": 433,
+            "y2": 312,
+            "text": "Finanzbuchhaltung",
+            "text_entropy": 0.08062744140625
+          },
+          {
+            "id": 75,
+            "x1": 127,
+            "y1": 192,
+            "x2": 423,
+            "y2": 224,
+            "text": "Bilanzbuchhalterin",
+            "text_entropy": 0.051361083984375
+          },
+          {
+            "id": 76,
+            "x1": 125,
+            "y1": 1115,
+            "x2": 523,
+            "y2": 1158,
+            "text": "Bilanzbuchhalterprüfung",
+            "text_entropy": 0.05572509765625
+          },
+          {
+            "id": 77,
+            "x1": 127,
+            "y1": 1540,
+            "x2": 521,
+            "y2": 1579,
+            "text": "Bilanzbuchhalterprüfung",
+            "text_entropy": 0.0914306640625
+          },
+          {
+            "id": 78,
+            "x1": 259,
+            "y1": 2046,
+            "x2": 518,
+            "y2": 2078,
+            "text": "Bilanzbuchhalter",
+            "text_entropy": 0.10943603515625
+          },
+          {
+            "id": 79,
+            "x1": 520,
+            "y1": 2046,
+            "x2": 527,
+            "y2": 2078,
+            "text": "/",
+            "text_entropy": 0.10943603515625
+          },
+          {
+            "id": 80,
+            "x1": 529,
+            "y1": 2046,
+            "x2": 554,
+            "y2": 2078,
+            "text": "in",
+            "text_entropy": 0.10943603515625
+          },
+          {
+            "id": 81,
+            "x1": 125,
+            "y1": 1621,
+            "x2": 563,
+            "y2": 1660,
+            "text": "Personalverrechnungskurs",
+            "text_entropy": 0.111328125
+          }
+        ],
+        "fulltext": "Kompetenz\nScore\nBilanzbuchhalterin\n100\nFinanzbuchhaltung\n90\nLohnverrechnung\n85\nTeil der Berufsobergruppe\nKompetenz\nRechnungswesen und Steuerberatung\nScore\n95\nBüro und Verwaltung\n70\nVoraussetzungen\nKompetenz\nBilanzbuchhalterprüfung\nBerufserfahrung Rechnungswesen (5 + Jahre)\nScore\n100\n90\nZertifikate\nKompetenz\nBilanzbuchhalterprüfung (WIFI)\nPersonalverrechnungskurs (BFI)\nScore\n100\n100\nECDL Advanced\n100\nAMS 6-Steller\nKompetenz\nScore\n331105 Bilanzbuchhalter / in\n95\n331101 Buchhalter / in\n88\nExplore our developer-friendly HTML to PDF API\nPrinted using PDFCrowd\nHTML to PDF"
+      }
+    ]
+  },
+  "page_images": [
+    "/processing/results/e2c5b23a-f8c2-48ba-8ff2-78c7c485d804/page-images/1",
+    "/processing/results/e2c5b23a-f8c2-48ba-8ff2-78c7c485d804/page-images/2"
+  ],
+  "thumbnail": "/processing/results/e2c5b23a-f8c2-48ba-8ff2-78c7c485d804/thumbnail",
+  "pdf": "/processing/results/e2c5b23a-f8c2-48ba-8ff2-78c7c485d804/pdf",
+  "hocr": "/processing/results/e2c5b23a-f8c2-48ba-8ff2-78c7c485d804/hocr"
+}

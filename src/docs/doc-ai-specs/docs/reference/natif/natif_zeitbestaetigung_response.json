@@ -1,0 +1,96 @@
+{
+  "processing_id": "65615eee-9264-40eb-a429-695d4fdb711d",
+  "workflow_id": "9b7a0c07-241c-4f89-b2a6-5c67cad30c89",
+  "workflow_name": "Zeitbestätigungen",
+  "available_results": [
+    "extractions",
+    "ocr",
+    "page-images",
+    "thumbnail",
+    "pdf",
+    "hocr"
+  ],
+  "extractions": {
+    "schema_version": 1,
+    "document_type": "custom_extraction",
+    "vorname": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.9956260919570923,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 101
+        }
+      ],
+      "value": "Mehmet"
+    },
+    "familienname": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.9962707757949829,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 89
+        }
+      ],
+      "value": "Yilmaz"
+    },
+    "datum_von": null,
+    "datum_bis": null,
+    "ausstellungsdatum": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.798797070980072,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 117
+        }
+      ],
+      "value": "2025-03-25"
+    },
+    "grund_der_abwesenheit": null,
+    "zeit_von": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.6520663574337959,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 62
+        },
+        {
+          "page_num": 1,
+          "bbox_id": 64
+        },
+        {
+          "page_num": 1,
+          "bbox_id": 65
+        },
+        {
+          "page_num": 1,
+          "bbox_id": 67
+        }
+      ],
+      "value": "10 00 11 00"
+    },
+    "zeit_bis": {
+      "validation_problem": false,
+      "note": "",
+      "confidence": 0.5233522206544876,
+      "bbox_refs": [
+        {
+          "page_num": 1,
+          "bbox_id": 65
+        },
+        {
+          "page_num": 1,
+          "bbox_id": 67
+        }
+      ],
+      "value": "11 00"
+    }
+  }
+}

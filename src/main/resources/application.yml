@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: doc-ai
+  profiles:
+    default: anthropic
+  threads:
+    virtual:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 21MB
+  ai:
+    model:
+      embedding: none
+
+docai:
+  intake:
+    render-dpi: 150
+    max-image-edge: 1600
+    max-pages: 5
+  ai:
+    timeout: 60s
+    retries-on-mapping-error: 1
+  validation:
+    max-days-in-past: 90
+    max-days-in-future: 14
+    max-krankenstand-days: 60
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: anthropic
+  ai:
+    model:
+      chat: anthropic
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY}
+      chat:
+        options:
+          model: claude-sonnet-5
+          max-tokens: 4096
+          temperature: 0.0
+
+---
+spring:
+  config:
+    activate:
+      on-profile: ollama
+  ai:
+    model:
+      chat: ollama
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      init:
+        pull-model-strategy: never
+      chat:
+        options:
+          model: qwen2.5vl:7b
+          num-ctx: 16384
+          temperature: 0.0
