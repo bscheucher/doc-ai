@@ -25,6 +25,10 @@ val pdfboxVersion = "3.0.8"
 val springdocVersion = "2.9.1"
 
 dependencies {
+    // Logging only: @Slf4j, to match the company standard. Version from the Boot BOM.
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
