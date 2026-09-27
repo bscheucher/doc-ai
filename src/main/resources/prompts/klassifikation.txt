@@ -1,0 +1,24 @@
+Bestimme, um welche Art von Dokument es sich handelt.
+
+Moegliche Werte fuer typ:
+
+KRANKENSTANDSBESTAETIGUNG
+  Krankmeldung, Arbeitsunfaehigkeitsmeldung oder Krankenstandsbestaetigung, etwa von der OEGK
+  oder von einer Aerztin bzw. einem Arzt. Bestaetigt die Arbeitsunfaehigkeit fuer einen oder
+  mehrere Tage.
+
+ZEITBESTAETIGUNG
+  Bestaetigt die Anwesenheit bei einem Termin, etwa in einer Ordination, einer Ambulanz, bei
+  einer Behoerde, bei Gericht oder beim AMS, an einem Datum, meist mit einer Uhrzeit von-bis.
+  Bestaetigt ausdruecklich keine Arbeitsunfaehigkeit.
+
+UNBEKANNT
+  Alles andere, oder wenn keine der beiden Arten klar zutrifft.
+
+Entscheidungshilfe: Wird eine Arbeitsunfaehigkeit oder ein Krankenstand ueber einen Zeitraum
+bestaetigt, ist es eine KRANKENSTANDSBESTAETIGUNG. Wird nur eine Anwesenheit zu einem Termin
+bestaetigt, ist es eine ZEITBESTAETIGUNG. Bist du unsicher, waehle UNBEKANNT statt zu raten.
+
+begruendung: ein einziger kurzer Satz auf Deutsch, der die Einordnung begruendet. Nenne darin
+das Formular oder den Aussteller und das erkannte Merkmal. Nenne darin keine Diagnose, keine
+Krankheitsbezeichnung und keinen Namen einer Person.
