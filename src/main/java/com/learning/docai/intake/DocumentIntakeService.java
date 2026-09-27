@@ -24,14 +24,14 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.learning.docai.api.DocAiException;
 import com.learning.docai.api.ErrorType;
 import com.learning.docai.config.IntakeProperties;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Validates an upload (SPEC §5) and converts it to page images (SPEC §2 step 1).
@@ -41,10 +41,9 @@ import com.learning.docai.config.IntakeProperties;
  * the render DPI, and an image is decoded subsampled. Without that a few hundred bytes of
  * valid input (a 14400 pt page, a PNG declaring huge dimensions) would allocate gigabytes.
  */
+@Slf4j
 @Service
 public class DocumentIntakeService {
-
-    private static final Logger log = LoggerFactory.getLogger(DocumentIntakeService.class);
 
     private static final float POINTS_PER_INCH = 72f;
 

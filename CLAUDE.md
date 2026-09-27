@@ -38,6 +38,8 @@ Java 21, Spring Boot 3.5.x, Spring AI 1.1.x (not 2.x), Gradle Kotlin DSL, PDFBox
 - Domain names stay German (Krankenstand, Zeitbestaetigung, Kompetenzprofil, Teilnehmer);
   technical names in English.
 - DTOs and extraction models are Java records. Constructor injection only. No field injection.
+- Loggers via Lombok `@Slf4j` on the class (company standard); use the generated `log` field.
+  Lombok is for logging only - do not use `@Data`/`@Builder`/`@Value`; records cover those.
 - Configuration via `@ConfigurationProperties` records, prefix `docai`.
 - Controllers stay thin: HTTP mapping only; logic lives in services.
 - Errors as RFC 7807 `ProblemDetail` via one `@RestControllerAdvice`.

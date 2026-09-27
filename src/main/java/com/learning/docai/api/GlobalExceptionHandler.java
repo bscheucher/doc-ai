@@ -1,7 +1,5 @@
 package com.learning.docai.api;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -17,6 +15,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Single source of RFC 7807 responses (SPEC §6). Bodies never contain document content.
  *
@@ -27,10 +27,9 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  * failures. Exceptions from the error catalogue are mapped by overriding the specific hooks -
  * declaring our own {@code @ExceptionHandler} for those types would be an ambiguous mapping.
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
-
-    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(DocAiException.class)
     public ResponseEntity<Object> handleDocAi(DocAiException ex, WebRequest request) {
