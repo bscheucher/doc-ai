@@ -1,7 +1,7 @@
 package com.learning.docai.validation;
 
 /**
- * The issue catalogue of SPEC §4.1-4.3. Each code carries its severity and its German
+ * The issue catalogue of SPEC §4.1-4.4. Each code carries its severity and its German
  * message, so a rule only has to name the code: callers rely on the code, never on the text.
  */
 public enum IssueCode {
@@ -29,7 +29,15 @@ public enum IssueCode {
     UHRZEIT_FEHLT(Schweregrad.WARNUNG,
             "Uhrzeit fehlt."),
     UHRZEIT_REIHENFOLGE(Schweregrad.FEHLER,
-            "Die Endzeit liegt nicht nach der Startzeit.");
+            "Die Endzeit liegt nicht nach der Startzeit."),
+    KEINE_KOMPETENZEN(Schweregrad.WARNUNG,
+            "Es wurden keine fachlichen Kompetenzen gefunden."),
+    SCORE_OHNE_BEZEICHNUNG(Schweregrad.FEHLER,
+            "Zu diesem Wert fehlt die Bezeichnung der Kompetenz."),
+    BEZEICHNUNG_OHNE_SCORE(Schweregrad.WARNUNG,
+            "Zu dieser Kompetenz fehlt der Wert."),
+    SCORE_AUSSERHALB(Schweregrad.FEHLER,
+            "Der Wert der Kompetenz liegt ausserhalb von 0 bis 100.");
 
     private final Schweregrad schweregrad;
     private final String meldung;

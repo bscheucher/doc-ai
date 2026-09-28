@@ -1,0 +1,26 @@
+Lies die Daten aus diesem Kompetenzprofil aus. Das Dokument kommt vom AMS und listet die
+Kompetenzen einer Person, meist in Tabellen mit einer Bezeichnung und einem Wert je Zeile.
+
+Hinweise zu einzelnen Feldern:
+
+- vorname und nachname: die Person, zu der das Profil gehoert. Das ist nicht die Beraterin
+  oder der Berater und nicht die ausstellende Stelle. Titel gehoeren nicht dazu.
+- geburtsdatum: das Geburtsdatum der Person, nicht das Datum des Ausdrucks.
+- versicherungsnummer: die zehnstellige oesterreichische Versicherungsnummer, nur Ziffern,
+  ohne Leerzeichen. Steht keine auf dem Dokument, gib null zurueck.
+- fachlich: die fachlichen Kompetenzen, ein Eintrag je Tabellenzeile, in der Reihenfolge des
+  Dokuments.
+- ueberfachlich: die ueberfachlichen Kompetenzen, nach denselben Regeln.
+- zertifikate und interessengebiete: die Eintraege dieser Listen, so wie sie dastehen. Stehen
+  keine da, gib eine leere Liste zurueck.
+
+Zu den Kompetenztabellen:
+
+- Der Wert gehoert zu der Kompetenz in derselben Zeile. Verschiebe die Werte nicht gegen die
+  Bezeichnungen, auch wenn die Zeilen unterschiedlich hoch sind oder eine Bezeichnung ueber
+  zwei Zeilen umgebrochen ist.
+- Der Wert ist eine ganze Zahl von 0 bis 100. Ist er als Balken dargestellt, uebernimm die
+  Zahl, die dabeisteht; steht keine dabei, gib null zurueck und schaetze nicht.
+- Zeilen ohne Bezeichnung und ohne Wert laesst du weg.
+- Steht in einer Zeile nur eines von beidem, gib den gelesenen Teil zurueck und den anderen
+  als null. Erfinde nichts dazu.

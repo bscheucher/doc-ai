@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ import org.springframework.util.MultiValueMap;
 import com.learning.docai.ai.AiResult;
 import com.learning.docai.ai.DocumentAiClient;
 import com.learning.docai.intake.TestDocuments;
+import com.learning.docai.kompetenz.Kompetenz;
+import com.learning.docai.kompetenz.KompetenzprofilDaten;
 import com.learning.docai.krankenstand.KrankenstandDaten;
 import com.learning.docai.zeitbestaetigung.ZeitbestaetigungDaten;
 
@@ -103,6 +106,26 @@ class ExtraktionServerTest {
                 .contains("\"zeitVon\":\"10:30\"")
                 .contains("\"zeitBis\":\"11:15\"")
                 .contains("\"datumBis\":null");
+    }
+
+    @Test
+    void writesTheCompetencyListsAsArraysEvenWhenTheModelLeftThemOut() throws Exception {
+        when(aiClient.extract(any(), any(), eq(KompetenzprofilDaten.class))).thenReturn(
+                new AiResult<>(new KompetenzprofilDaten("Amira", "Ahmed",
+                        LocalDate.of(1985, 7, 13), null,
+                        List.of(new Kompetenz("Buero Verwaltung", 70)), null, null, null),
+                        "test", "test-modell", 2400, 180, 2100L));
+
+        ResponseEntity<String> response = post("/api/v1/extraktion/kompetenzprofil", upload());
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody())
+                .contains("\"dokumenttyp\":\"KOMPETENZPROFIL\"")
+                .contains("\"geburtsdatum\":\"1985-07-13\"")
+                .contains("\"fachlich\":[{\"bezeichnung\":\"Buero Verwaltung\",\"score\":70}]")
+                .contains("\"ueberfachlich\":[]")
+                .contains("\"zertifikate\":[]")
+                .contains("\"interessengebiete\":[]");
     }
 
     private static MultiValueMap<String, Object> upload() throws Exception {
