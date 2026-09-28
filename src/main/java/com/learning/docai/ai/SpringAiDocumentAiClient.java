@@ -51,7 +51,7 @@ public class SpringAiDocumentAiClient implements DocumentAiClient {
 
     /**
      * Each call is run on its own virtual thread purely so it can be abandoned on timeout;
-     * see.
+     * see {@link #callWithin}.
      */
     private final ExecutorService modelCalls = Executors.newVirtualThreadPerTaskExecutor();
 
