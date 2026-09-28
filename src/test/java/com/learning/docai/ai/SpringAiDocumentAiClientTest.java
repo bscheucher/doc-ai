@@ -159,6 +159,57 @@ class SpringAiDocumentAiClientTest {
     }
 
     @Test
+    void spendsOneTimeoutBudgetOnAllAttempts() {
+        // Each attempt sleeps 300 ms and answers unmappably, so a per-attempt timeout would
+        // hold the caller for two full budgets and answer 502 long after the promised 504.
+        when(chatModel.call(any(Prompt.class))).thenAnswer(invocation -> {
+            Thread.sleep(300);
+            return response("kein JSON", 1, 1);
+        });
+
+        long startedAt = System.nanoTime();
+
+        assertThatThrownBy(() -> client(new AiProperties(Duration.ofMillis(500), 1))
+                .extract("anweisung", TWO_PAGES, Antwort.class))
+                .isInstanceOf(DocAiException.class)
+                .extracting(e -> ((DocAiException) e).errorType())
+                .isEqualTo(ErrorType.MODEL_TIMEOUT);
+
+        assertThat(Duration.ofNanos(System.nanoTime() - startedAt))
+                .isLessThan(Duration.ofMillis(900));
+    }
+
+    @Test
+    void reportsTheDurationTheCallerWaitedIncludingTheRetry() {
+        AtomicInteger calls = new AtomicInteger();
+        when(chatModel.call(any(Prompt.class))).thenAnswer(invocation -> {
+            if (calls.incrementAndGet() == 1) {
+                Thread.sleep(200);
+                return response("kein JSON", 1, 1);
+            }
+            return response("""
+                    {"typ":"A","begruendung":"weil"}""", 1, 1);
+        });
+
+        AiResult<Antwort> result = client(PROPERTIES).extract("anweisung", TWO_PAGES, Antwort.class);
+
+        assertThat(result.durationMs()).isGreaterThanOrEqualTo(200);
+    }
+
+    @Test
+    void keepsTheModelOutputOutOfTheFailure() {
+        // Jackson quotes the text it could not parse; carrying that cause into the 502 would
+        // put document content into any stack trace that is ever logged.
+        answerWith("Diagnose: Grippe, Patient Mueller", 1, 1);
+
+        assertThatThrownBy(() -> client(PROPERTIES).extract("anweisung", TWO_PAGES, Antwort.class))
+                .isInstanceOf(DocAiException.class)
+                .hasNoCause()
+                .hasMessageNotContaining("Grippe")
+                .hasMessageNotContaining("Mueller");
+    }
+
+    @Test
     void mapsATransientProviderFailureTo503() {
         when(chatModel.call(any(Prompt.class)))
                 .thenThrow(new TransientAiException("rate limited"));

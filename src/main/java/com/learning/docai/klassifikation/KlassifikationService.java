@@ -33,6 +33,8 @@ public class KlassifikationService {
 
         // A model that answers with an unknown or absent type is treated as UNBEKANNT rather
         // than as a failure: the document is then reviewed by a person, which is the safe end.
+        // An unknown answer is folded in Dokumenttyp.fromModelAnswer; an absent one arrives here
+        // as null, because Jackson does not call a creator for a field the model left out.
         Dokumenttyp typ = result.value().typ() == null ? Dokumenttyp.UNBEKANNT : result.value().typ();
         boolean manuellePruefung = typ == Dokumenttyp.UNBEKANNT;
 

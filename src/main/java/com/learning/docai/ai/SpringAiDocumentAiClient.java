@@ -51,7 +51,7 @@ public class SpringAiDocumentAiClient implements DocumentAiClient {
 
     /**
      * Each call is run on its own virtual thread purely so it can be abandoned on timeout;
-     * see {@link #callWithTimeout}.
+     * see.
      */
     private final ExecutorService modelCalls = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -80,49 +80,63 @@ public class SpringAiDocumentAiClient implements DocumentAiClient {
         // SPEC §2: a mapping failure is retried once, because it is usually a transient
         // formatting slip rather than a document the model cannot read.
         int attempts = Math.max(0, properties.retriesOnMappingError()) + 1;
-        RuntimeException lastMappingFailure = null;
+
+        // SPEC §6 promises the caller a 504 once `docai.ai.timeout` passes, so the timeout is
+        // the budget for the whole request: the retry shares the deadline instead of starting
+        // a second one, which would let a slow model hold the caller for twice as long.
+        long startedAt = System.nanoTime();
+        long deadline = startedAt + properties.timeout().toNanos();
 
         for (int attempt = 1; attempt <= attempts; attempt++) {
-            long startedAt = System.nanoTime();
             try {
                 ResponseEntity<ChatResponse, T> response =
-                        callWithTimeout(() -> chatClient.prompt()
+                        callWithin(deadline, () -> chatClient.prompt()
                                 .system(systemPrompt)
                                 .user(user -> user.text(instruction).media(media.toArray(Media[]::new)))
                                 .call()
                                 .responseEntity(type));
 
-                long durationMs = millisSince(startedAt);
                 T value = response.entity();
                 if (value == null) {
                     throw new NotMappableException("Model returned no mappable content");
                 }
-                return toResult(value, response.response(), durationMs);
+                // Measured from the first attempt: a retry is time the caller waited too, and
+                // dauerMs is what the SPEC §10 timer reports.
+                return toResult(value, response.response(), millisSince(startedAt));
             } catch (RuntimeException e) {
                 if (!isMappingFailure(e)) {
                     throw e;
                 }
-                lastMappingFailure = e;
-                log.warn("Model output not mappable to {} (attempt {}/{})",
-                        type.getSimpleName(), attempt, attempts);
+                log.warn("Model output not mappable to {} ({}), attempt {}/{}",
+                        type.getSimpleName(), e.getClass().getSimpleName(), attempt, attempts);
             }
         }
-        throw new DocAiException(ErrorType.MODEL_ERROR, lastMappingFailure);
+        // Deliberately without a cause: Jackson quotes the unparsable model output in its
+        // message, and that text is document content (CLAUDE.md hard rules). Anything that
+        // logged this exception with its stack would leak it.
+        throw new DocAiException(ErrorType.MODEL_ERROR);
     }
 
     /**
      * Spring AI has no per-call timeout, so the call is run on another thread and abandoned
-     * when {@code docai.ai.timeout} passes (SPEC §6, 504).
+     * when the request's deadline passes (SPEC §6, 504). {@code deadlineNanos} is a
+     * {@link System#nanoTime()} reading shared by every attempt, so a retry only gets what is
+     * left of {@code docai.ai.timeout}.
      *
      * <p>Cancelling interrupts that thread, which does not necessarily abort a socket read
      * already in flight: the provider request may run on in the background until the HTTP
-     * client gives up. The caller is answered on time either way, and nothing is retried, so
-     * at worst we pay for one response nobody reads.
+     * client gives up. The caller is answered on time either way, and a timeout is never
+     * retried, so at worst we pay for one response nobody reads.
      */
-    private <R> R callWithTimeout(Callable<R> call) {
+    private <R> R callWithin(long deadlineNanos, Callable<R> call) {
+        long remainingNanos = deadlineNanos - System.nanoTime();
+        if (remainingNanos <= 0) {
+            log.warn("Model call budget of {} spent before the next attempt", properties.timeout());
+            throw new DocAiException(ErrorType.MODEL_TIMEOUT);
+        }
         Future<R> future = modelCalls.submit(call);
         try {
-            return future.get(properties.timeout().toMillis(), TimeUnit.MILLISECONDS);
+            return future.get(remainingNanos, TimeUnit.NANOSECONDS);
         } catch (TimeoutException e) {
             future.cancel(true);
             log.warn("Model call timed out after {}", properties.timeout());
