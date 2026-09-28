@@ -131,6 +131,18 @@ class KompetenzprofilValidatorTest {
     }
 
     @Test
+    void treatsListsTheModelOmittedAsEmptyInsteadOfFailing() {
+        // A caller that hands over raw model output - as the sibling services do - must get
+        // the warning, not an NPE.
+        KompetenzprofilDaten roh = new KompetenzprofilDaten("Amira", "Ahmed", GEBURTSDATUM,
+                null, null, null, null, null);
+
+        assertThat(validator.pruefe(roh))
+                .extracting(ValidationIssue::feld, ValidationIssue::code)
+                .containsExactly(tuple("fachlich", IssueCode.KEINE_KOMPETENZEN));
+    }
+
+    @Test
     void doesNotApplyTheDateWindowToTheDateOfBirth() {
         // Every date of birth is decades old; §4.4 asks for no date check here, and DATUM_ALT
         // would otherwise fire on every single profile.
@@ -140,8 +152,7 @@ class KompetenzprofilValidatorTest {
     }
 
     private List<ValidationIssue> pruefe(KompetenzprofilDaten daten) {
-        // As the service does it: the rules see the lists the caller will see (SPEC §3.5).
-        return validator.pruefe(daten.normalisiert());
+        return validator.pruefe(daten);
     }
 
     private static KompetenzprofilDaten vollstaendig() {

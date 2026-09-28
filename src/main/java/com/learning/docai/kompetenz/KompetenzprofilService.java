@@ -41,6 +41,8 @@ public class KompetenzprofilService {
         AiResult<KompetenzprofilDaten> result =
                 aiClient.extract(INSTRUCTION, pages, KompetenzprofilDaten.class);
 
+        // Normalised here for the response; the validator normalises again for its own safety,
+        // which is idempotent and keeps the indices of the two in step.
         KompetenzprofilDaten daten = result.value().normalisiert();
         List<ValidationIssue> probleme = validator.pruefe(daten);
 

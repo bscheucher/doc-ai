@@ -22,8 +22,13 @@ public class KompetenzprofilValidator {
 
     private final SharedRules shared;
 
-    /** Expects the data as the caller will see it, i.e. after {@link KompetenzprofilDaten#normalisiert()}. */
-    public List<ValidationIssue> pruefe(KompetenzprofilDaten daten) {
+    /**
+     * Takes the model output as it comes. Normalising here rather than trusting the caller
+     * costs nothing - it is idempotent, and the service has already done it - but it keeps a
+     * list the model omitted from turning a KEINE_KOMPETENZEN warning into a 500.
+     */
+    public List<ValidationIssue> pruefe(KompetenzprofilDaten roh) {
+        KompetenzprofilDaten daten = roh.normalisiert();
         IssueCollector issues = new IssueCollector();
 
         shared.pflichtfeld(issues, "vorname", daten.vorname());
