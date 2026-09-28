@@ -30,6 +30,12 @@ docai:
     max-days-in-past: 90
     max-days-in-future: 14
     max-krankenstand-days: 60
+  # Resource server per SPEC §7. Empty by default so the 'local' profile needs no tenant; any
+  # other profile fails at startup with the name of the missing property.
+  security:
+    issuer-uri: ${DOCAI_JWT_ISSUER_URI:}
+    audience: ${DOCAI_JWT_AUDIENCE:}
+    required-role: DocAi.Process
 
 logging:
   level:
