@@ -37,6 +37,9 @@ class SvnrValidatorTest {
     @Test
     void removesWhitespaceBeforeAnythingElse() {
         assertThat(SvnrValidator.normalise("  4568 1503 92 ")).isEqualTo("4568150392");
+        // A hint copied out of a web form carries these, and they are not matched by "\\s".
+        assertThat(SvnrValidator.normalise("4568\u00a0150392")).isEqualTo("4568150392");
+        assertThat(SvnrValidator.normalise("4568\u202f150392")).isEqualTo("4568150392");
         assertThat(SvnrValidator.normalise(null)).isNull();
     }
 }

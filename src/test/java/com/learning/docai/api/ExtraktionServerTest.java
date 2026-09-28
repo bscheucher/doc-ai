@@ -84,6 +84,7 @@ class ExtraktionServerTest {
 
         ResponseEntity<String> response = post("/api/v1/extraktion/krankenstand", parts);
 
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).doesNotContain("NAME_WEICHT_AB");
     }
 

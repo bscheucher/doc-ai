@@ -16,10 +16,12 @@ public final class SvnrValidator {
 
     /**
      * Whitespace is allowed on the document and in the hint from ibosNG ("4568 150392"), so
-     * it is removed before anything is compared or checked.
+     * it is removed before anything is compared or checked. The Unicode class is deliberate:
+     * a hint copied out of a web form routinely carries a non-breaking space, and leaving it
+     * in would report a number as differing from an identical one.
      */
     public static String normalise(String svnr) {
-        return svnr == null ? null : svnr.replaceAll("\\s", "");
+        return svnr == null ? null : svnr.replaceAll("\\p{IsWhite_Space}", "");
     }
 
     public static boolean isValid(String svnr) {

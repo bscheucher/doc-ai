@@ -35,6 +35,14 @@ class NameMatcherTest {
     }
 
     @Test
+    void doesNotMatchANameThatNormalisesToNothing() {
+        // Another script or OCR noise leaves no letters to compare - a reviewer has to look,
+        // because no other rule fires on a field that is filled in.
+        assertThat(NameMatcher.matches("\u0418\u0432\u0430\u043d\u043e\u0432", "Müller")).isFalse();
+        assertThat(NameMatcher.matches("----", "Müller")).isFalse();
+    }
+
+    @Test
     void comparesNothingWhenOneSideIsMissing() {
         // The missing side is PFLICHTFELD_FEHLT's business, not a name mismatch.
         assertThat(NameMatcher.matches(null, "Müller")).isTrue();
