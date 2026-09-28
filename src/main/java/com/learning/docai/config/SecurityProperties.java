@@ -9,7 +9,10 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * {@link SecurityConfig} checks them when it actually builds the secured chain.
  *
  * @param issuerUri    Azure Entra ID tenant, e.g. https://login.microsoftonline.com/<tenant>/v2.0
- * @param audience     the `aud` this API accepts, i.e. its own application id URI
+ * @param audience     the `aud` this API accepts. For tokens from the v2.0 endpoint that is
+ *                     the client id (GUID) of this API's app registration; the `api://...`
+ *                     App ID URI appears as `aud` only in v1.0 tokens, so it must match the
+ *                     endpoint the issuer above names
  * @param requiredRole the Entra app role a caller must carry to reach /api/**
  */
 @ConfigurationProperties(prefix = "docai.security")

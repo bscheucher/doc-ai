@@ -1,5 +1,7 @@
 package com.learning.docai.config;
 
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -32,11 +34,15 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+        String rolle = pflichtwert(properties.requiredRole(), "docai.security.required-role");
+
         return http
                 .authorizeHttpRequests(requests -> requests
                         // Liveness and readiness are polled by the platform, which has no token.
-                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
-                        .requestMatchers("/api/**").hasAuthority(properties.requiredRole())
+                        // Asked for by endpoint rather than by path, so a moved actuator base
+                        // path cannot silently turn the probes into 401s.
+                        .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
+                        .requestMatchers("/api/**").hasAuthority(rolle)
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(rollenKonverter())))
@@ -73,8 +79,10 @@ public class SecurityConfig {
     }
 
     /**
-     * A secured deployment without an issuer or an audience would accept nothing anyway;
-     * saying so at startup beats a 401 that nobody can explain.
+     * A secured deployment without an issuer, an audience or a role would accept nothing
+     * anyway; saying so at startup beats a 401 or a 403 that nobody can explain. The role is
+     * checked too although it has a default: application.yml sets it, so the default no longer
+     * applies and an empty override would bind as "" and match no token.
      */
     private static String pflichtwert(String wert, String property) {
         if (wert == null || wert.isBlank()) {

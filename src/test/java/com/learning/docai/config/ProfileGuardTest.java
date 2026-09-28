@@ -3,7 +3,11 @@ package com.learning.docai.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -21,6 +25,15 @@ import ch.qos.logback.core.read.ListAppender;
  * provider in `prod` has to announce itself.
  */
 class ProfileGuardTest {
+
+    private final List<Logger> mitgeschnitten = new ArrayList<>();
+
+    /** Logback loggers are global and outlive the test, so the appenders have to come off. */
+    @AfterEach
+    void detachAppenders() {
+        mitgeschnitten.forEach(Logger::detachAndStopAllAppenders);
+        mitgeschnitten.clear();
+    }
 
     @Test
     void refusesToStartWithLocalAndProdTogether() {
@@ -77,10 +90,13 @@ class ProfileGuardTest {
                 .run();
     }
 
-    private static ListAppender<ILoggingEvent> mitschnitt(Class<?> quelle) {
+    private ListAppender<ILoggingEvent> mitschnitt(Class<?> quelle) {
         ListAppender<ILoggingEvent> appender = new ListAppender<>();
         appender.start();
-        ((Logger) LoggerFactory.getLogger(quelle)).addAppender(appender);
+
+        Logger logger = (Logger) LoggerFactory.getLogger(quelle);
+        logger.addAppender(appender);
+        mitgeschnitten.add(logger);
         return appender;
     }
 }
