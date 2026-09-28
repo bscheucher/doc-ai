@@ -17,6 +17,12 @@ public enum ErrorType {
             "Nicht unterstuetzter Dateityp. Erlaubt sind PDF, PNG und JPEG."),
     UNREADABLE_DOCUMENT(HttpStatus.UNPROCESSABLE_ENTITY, "unreadable-document",
             "Das Dokument konnte nicht gelesen werden."),
+    MODEL_ERROR(HttpStatus.BAD_GATEWAY, "model-error",
+            "Das Modell lieferte kein verwertbares Ergebnis."),
+    MODEL_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "model-unavailable",
+            "Der Modelldienst ist derzeit nicht erreichbar."),
+    MODEL_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "model-timeout",
+            "Die Auswertung durch das Modell hat zu lange gedauert."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "internal-error",
             "Unerwarteter Fehler bei der Verarbeitung.");
 

@@ -10,6 +10,10 @@ spring:
     multipart:
       max-file-size: 20MB
       max-request-size: 21MB
+      # Uploads are never persisted (SPEC §5). Spring Boot's default threshold of 0 bytes makes
+      # Tomcat write every part to java.io.tmpdir before the handler ever sees it; at or above
+      # max-file-size no accepted upload can reach the disk.
+      file-size-threshold: 20MB
   ai:
     model:
       embedding: none
@@ -26,6 +30,14 @@ docai:
     max-days-in-past: 90
     max-days-in-future: 14
     max-krankenstand-days: 60
+
+logging:
+  level:
+    # Spring AI's BeanOutputConverter logs the model's raw answer at ERROR when it cannot be
+    # mapped onto the record. That text is document content - names, SVNR, addresses - and must
+    # never be logged (CLAUDE.md hard rules), so this one logger stays silent. The mapping
+    # failure itself is reported by SpringAiDocumentAiClient without the model output.
+    org.springframework.ai.converter.BeanOutputConverter: "OFF"
 
 management:
   endpoints:
