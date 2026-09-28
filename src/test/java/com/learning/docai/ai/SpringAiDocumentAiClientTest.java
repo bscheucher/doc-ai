@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -210,6 +212,28 @@ class SpringAiDocumentAiClientTest {
     }
 
     @Test
+    void mapsIsoDatesAndTimesOntoJavaTime() {
+        // Endpoints 2 and 3 extract java.time values, and it is Spring AI's own ObjectMapper
+        // that has to understand them - not the one Spring Boot configures for our responses.
+        answerWith("""
+                {"tag":"2026-03-15","zeit":"10:30:00"}""", 1, 1);
+
+        Termin termin = client(PROPERTIES).extract("anweisung", TWO_PAGES, Termin.class).value();
+
+        assertThat(termin.tag()).isEqualTo(LocalDate.of(2026, 3, 15));
+        assertThat(termin.zeit()).isEqualTo(LocalTime.of(10, 30));
+    }
+
+    @Test
+    void acceptsATimeWithoutSeconds() {
+        answerWith("""
+                {"tag":"2026-03-15","zeit":"10:30"}""", 1, 1);
+
+        assertThat(client(PROPERTIES).extract("anweisung", TWO_PAGES, Termin.class)
+                .value().zeit()).isEqualTo(LocalTime.of(10, 30));
+    }
+
+    @Test
     void mapsATransientProviderFailureTo503() {
         when(chatModel.call(any(Prompt.class)))
                 .thenThrow(new TransientAiException("rate limited"));
@@ -308,5 +332,9 @@ class SpringAiDocumentAiClientTest {
 
     /** Stand-in for a real extraction record: this test is about the client, not a schema. */
     record Antwort(String typ, String begruendung) {
+    }
+
+    /** The java.time shapes endpoints 2 and 3 extract (SPEC §3.3, §3.4). */
+    record Termin(LocalDate tag, LocalTime zeit) {
     }
 }

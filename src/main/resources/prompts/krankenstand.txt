@@ -1,0 +1,25 @@
+Lies die Daten aus dieser Krankenstandsbestaetigung oder Arbeitsunfaehigkeitsmeldung aus.
+
+Zu erwarten sind oesterreichische Formulare, etwa der OEGK, einer Ordination oder eines
+Spitals, oft mit Stempel und Unterschrift, teilweise handschriftlich ausgefuellt.
+
+Hinweise zu einzelnen Feldern:
+
+- vorname und familienname: die Person, die arbeitsunfaehig ist. Das ist nicht die Aerztin
+  oder der Arzt und nicht die Ordination. Titel wie Dr. oder Mag. gehoeren nicht dazu.
+- versicherungsnummer: die zehnstellige oesterreichische Versicherungsnummer der Person.
+  Die ersten vier Ziffern sind laufende Nummer und Pruefziffer, die restlichen sechs sind
+  das Geburtsdatum in der Form TTMMJJ. Gib nur Ziffern zurueck, ohne Leerzeichen und ohne
+  Schraegstrich. Uebernimm keine andere Nummer vom Formular, etwa eine Vertragspartner-
+  oder Ordinationsnummer.
+- krankenstandsadresse: die Adresse, an der sich die Person waehrend des Krankenstands
+  aufhaelt, als eine Zeile. Das ist nicht die Adresse der Ordination.
+- arbeitsunfaehigVon: der erste Tag der Arbeitsunfaehigkeit.
+- letzterTagArbeitsunfaehigkeit: der letzte Tag, genau wie angegeben. Steht dort nur ein
+  voraussichtliches Ende, uebernimm dieses. Steht gar kein Ende da, gib null zurueck und
+  rechne keines aus.
+- ausstellungsdatum: das Datum, an dem das Dokument ausgestellt wurde. Verwechsle es nicht
+  mit dem Beginn der Arbeitsunfaehigkeit, auch wenn beide oft gleich sind.
+
+Den Grund der Arbeitsunfaehigkeit, die Diagnose, den ICD-Code und jede andere medizinische
+Angabe gibst du nicht zurueck, auch wenn sie gut lesbar auf dem Dokument steht.

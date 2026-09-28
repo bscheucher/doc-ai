@@ -1,0 +1,24 @@
+Lies die Daten aus dieser Zeitbestaetigung aus. Das Dokument bestaetigt, dass eine Person zu
+einem Termin anwesend war, etwa in einer Ordination, einer Ambulanz, bei einer Behoerde, bei
+Gericht oder beim AMS.
+
+Hinweise zu einzelnen Feldern:
+
+- vorname und familienname: die Person, deren Anwesenheit bestaetigt wird. Das ist nicht die
+  ausstellende Stelle und nicht die unterschreibende Person. Titel gehoeren nicht dazu.
+- datumVon: das Datum des Termins. Erstreckt sich die Bestaetigung ausdruecklich ueber
+  mehrere Tage, ist es der erste Tag.
+- datumBis: nur ausfuellen, wenn sich die Bestaetigung ueber mehrere Tage erstreckt. Bei
+  einem Termin an einem einzigen Tag gibst du null zurueck.
+- zeitVon und zeitBis: Beginn und Ende der Anwesenheit sind zwei getrennte Werte. Steht nur
+  eine einzige Uhrzeit auf dem Dokument, gehoert sie zu zeitVon und zeitBis bleibt null.
+  Erfinde kein Ende und rechne keine Dauer dazu.
+- ausstellungsdatum: das Datum, an dem das Dokument ausgestellt wurde. Uebernimm es nicht
+  als datumVon, auch wenn beide oft gleich sind.
+- grundDerAbwesenheit: die Art des Termins, so wie sie dasteht, etwa Arzttermin,
+  Kontrolltermin oder Behoerdentermin. Steht nichts dazu da, gib null zurueck. Gib keine
+  Diagnose und keine Krankheitsbezeichnung zurueck, auch wenn sie dasteht.
+- aussteller: die Ordination, Ambulanz, Behoerde oder Stelle, die bestaetigt hat.
+
+Eine Bestaetigung ueber eine Arbeitsunfaehigkeit ist kein Termin. Steht auf dem Dokument ein
+Zeitraum der Arbeitsunfaehigkeit statt einer Anwesenheit, gib bei den Uhrzeiten null zurueck.
