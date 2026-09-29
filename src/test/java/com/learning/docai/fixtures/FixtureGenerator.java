@@ -80,6 +80,19 @@ public final class FixtureGenerator {
     /**
      * The straightforward case: every field present and plausible, so a clean run reports no
      * issues at all. SVNR 1238 010190 - check digit 8 over the other nine digits.
+     *
+     * <p>Three values are deliberately kept apart from the ones they are easily confused with,
+     * because a fixture that prints the same string twice cannot show whether the model picked the
+     * right one. Do not "tidy" them back together:
+     *
+     * <ul>
+     *   <li>the issue date is the day after the absence begins, so `ausstellungsdatum` and
+     *       `arbeitsunfaehigVon` differ - the confusion `krankenstand.txt` warns against;</li>
+     *   <li>the Krankenstandsadresse is in another district than the Ordination, so picking up the
+     *       practice address is visible;</li>
+     *   <li>the last day of the absence is five days after the first, so reading the end as the
+     *       beginning is visible.</li>
+     * </ul>
      */
     private static void krankenstand(Path datei, LocalDate heute) throws IOException {
         schreibe(datei, List.of(
@@ -90,12 +103,12 @@ public final class FixtureGenerator {
                 text("Name:                       Max Mustermann"),
                 text("Geburtsdatum:               01.01.1990"),
                 text("Versicherungsnummer:        1238 010190"),
-                text("Aufenthalt im Krankenstand: Hauptstraße 1, 1010 Wien"),
+                text("Aufenthalt im Krankenstand: Blumengasse 12, 1150 Wien"),
                 leer(),
                 text("Arbeitsunfähig von:         " + heute.minusDays(10).format(DATUM)),
                 text("Voraussichtlich bis:        " + heute.minusDays(5).format(DATUM)),
                 leer(),
-                text("Wien, am " + heute.minusDays(10).format(DATUM)),
+                text("Wien, am " + heute.minusDays(9).format(DATUM)),
                 text("Unterschrift / Stempel")));
     }
 
@@ -118,7 +131,13 @@ public final class FixtureGenerator {
                 text("Wien, am " + heute.minusDays(3).format(DATUM))));
     }
 
-    /** SVNR 4568 150392 - check digit 8. */
+    /**
+     * SVNR 4568 150392 - check digit 8.
+     *
+     * <p>Issued the day after the appointment, so `ausstellungsdatum` and `datumVon` differ. With
+     * both the same, the guard in `zeitbestaetigung.txt` against copying one into the other could
+     * not be tested. Do not make them equal again.
+     */
     private static void zeitbestaetigung(Path datei, LocalDate heute) throws IOException {
         schreibe(datei, List.of(
                 titel("TERMINBESTÄTIGUNG"),
@@ -133,7 +152,7 @@ public final class FixtureGenerator {
                 text("am " + heute.minusDays(7).format(DATUM) + " von 09:00 bis 11:30 Uhr"),
                 text("einen Arzttermin in unserer Ambulanz wahrgenommen hat."),
                 leer(),
-                text("Graz, am " + heute.minusDays(7).format(DATUM)),
+                text("Graz, am " + heute.minusDays(6).format(DATUM)),
                 text("Unterschrift / Stempel")));
     }
 
