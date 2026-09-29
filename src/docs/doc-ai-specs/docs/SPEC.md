@@ -262,8 +262,10 @@ Extraction with missing fields is **not** an error: 200 with null fields and iss
 ## 7. Security and data protection
 
 - OAuth2 resource server, JWT from Azure Entra ID (client-credentials flow from ibosNG backend).
-  Config: `spring.security.oauth2.resourceserver.jwt.issuer-uri`, expected audience, required
-  app role `DocAi.Process`. All `/api/**` require it. Actuator `health` open, rest secured.
+  Config: `spring.security.oauth2.resourceserver.jwt.issuer-uri`,
+  `spring.security.oauth2.resourceserver.jwt.audiences` (expected audience(s)), required app
+  role `DocAi.Process` in `docai.security.required-role`. All `/api/**` require it. Actuator
+  `health` open, rest secured.
 - Profile `local` may disable auth; it must never be active together with `prod`.
 - Documents and extracted data are processed in memory only; nothing persisted.
 - Logging restrictions: see CLAUDE.md "Hard rules".
