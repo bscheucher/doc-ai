@@ -21,7 +21,7 @@ it was committed. Regenerate instead of editing; the content lives in
 | `krankenstand.pdf` | 1, 2 | Complete and plausible - the run with no issues |
 | `krankenstand-ohne-ende.pdf` | 2 | Only a first day, so `ENDE_FEHLT` (legitimate, SPEC §4.2) |
 | `zeitbestaetigung.pdf` | 1, 3 | Arzttermin with a start and an end time |
-| `kompetenzprofil.pdf` | 4 | Both competency tables, certificates, interests; one blank row that must be dropped |
+| `kompetenzprofil.pdf` | 4 | Both competency tables, certificates, interests; one row without a score, so `BEZEICHNUNG_OHNE_SCORE` |
 | `unbekannt.pdf` | 1 | An invoice - neither class, so `UNBEKANNT` and `manuellePruefung` |
 | `zu-viele-seiten.pdf` | any | Six pages against `docai.intake.max-pages` of five; answered `422 unreadable-document` |
 | `krankenstand.png` | any | The same document as PNG, for the image path |

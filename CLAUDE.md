@@ -25,9 +25,15 @@ Java 21, Spring Boot 3.5.x, Spring AI 1.1.x (not 2.x), Gradle Kotlin DSL, PDFBox
 ```bash
 ./gradlew build                 # compile + all tests; must pass at the end of every phase
 ./gradlew test
-./gradlew bootRun               # default profile: anthropic (needs ANTHROPIC_API_KEY)
-./gradlew bootRun --args='--spring.profiles.active=ollama'
 ./gradlew test -PincludeLlmTests   # optional, calls a real model, never in CI
+./gradlew generateFixtures      # rewrite the sample documents in src/test/resources/fixtures
+
+# Running it. Any profile other than 'local' is a secured resource server (SPEC §7) and needs
+# DOCAI_JWT_ISSUER_URI and DOCAI_JWT_AUDIENCE, or it fails at startup naming the missing one.
+# 'local' turns authentication off, and naming any profile replaces spring.profiles.default,
+# so the model profile has to be named alongside it:
+./gradlew bootRun --args='--spring.profiles.active=local,anthropic'   # needs ANTHROPIC_API_KEY
+./gradlew bootRun --args='--spring.profiles.active=local,ollama'
 ```
 
 ## Code conventions

@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.web.SecurityFilterChain;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The resource server of SPEC §7: JWTs from Azure Entra ID, checked for issuer, audience and
@@ -25,6 +26,7 @@ import lombok.RequiredArgsConstructor;
  * the complement of {@link LocalSecurityConfig}, so exactly one of the two chains applies and
  * `local` can never switch authentication off in production.
  */
+@Slf4j
 @Configuration
 @Profile("!local | prod")
 @RequiredArgsConstructor
@@ -57,6 +59,13 @@ public class SecurityConfig {
     /**
      * Resolved on the first token rather than at startup: the service must come up even when
      * Entra ID is briefly unreachable, and a health probe has to be answerable while it is.
+     *
+     * <p>The price of that is where every failure lands: whatever goes wrong here - unreachable
+     * metadata, but also an issuer that does not match the one the metadata reports - reaches
+     * the caller as a bare 401, and Spring Security logs the cause at DEBUG only. At the
+     * default level a misconfigured issuer would 401 every call and say nothing, so the failure
+     * is logged here instead. It repeats per request because the decoder is only cached once it
+     * has been built, which is the right side to err on for a deployment that accepts nothing.
      */
     @Bean
     JwtDecoder jwtDecoder() {
@@ -64,11 +73,19 @@ public class SecurityConfig {
         String audience = pflichtwert(properties.audience(), "docai.security.audience");
 
         return new SupplierJwtDecoder(() -> {
-            NimbusJwtDecoder decoder = JwtDecoders.fromIssuerLocation(issuer);
-            decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
-                    JwtValidators.createDefaultWithIssuer(issuer),
-                    new AudienceValidator(audience)));
-            return decoder;
+            try {
+                NimbusJwtDecoder decoder = JwtDecoders.fromIssuerLocation(issuer);
+                decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+                        JwtValidators.createDefaultWithIssuer(issuer),
+                        new AudienceValidator(audience)));
+                return decoder;
+            } catch (RuntimeException e) {
+                log.error("Cannot build the JWT decoder for docai.security.issuer-uri={}; "
+                        + "every call will be answered 401 until this is fixed. For Entra v2.0 "
+                        + "the issuer is the tenant GUID, not the tenant domain: {}",
+                        issuer, e.getMessage());
+                throw e;
+            }
         });
     }
 

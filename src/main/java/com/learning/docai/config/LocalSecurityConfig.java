@@ -15,8 +15,8 @@ import lombok.extern.slf4j.Slf4j;
  * {@code SecurityFilterChain} Spring Boot's default chain answers every call with 401.
  *
  * <p>The profile expression is the guard from SPEC §7 that `local` must never disable auth in
- * `prod`: with both active this configuration is skipped and the secured chain applies. The
- * real chain (JWT, audience, role `DocAi.Process`) is phase 5.
+ * `prod`: with both active this configuration is skipped and {@link SecurityConfig} applies -
+ * the two expressions are exact complements, so one chain is always in place.
  */
 @Slf4j
 @Configuration
