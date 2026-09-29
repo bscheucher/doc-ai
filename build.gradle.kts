@@ -66,6 +66,18 @@ tasks.named<Test>("test") {
     }
 }
 
+// Sample documents for testing the endpoints by hand (Postman, curl). They are regenerated
+// rather than edited: every date in them is written relative to the day of generation, so
+// that they stay inside docai.validation.max-days-in-past.
+//   ./gradlew generateFixtures
+tasks.register<JavaExec>("generateFixtures") {
+    group = "documentation"
+    description = "Regenerates the sample documents in src/test/resources/fixtures"
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass = "com.learning.docai.fixtures.FixtureGenerator"
+    args("src/test/resources/fixtures")
+}
+
 // OCI image via Cloud Native Buildpacks (Paketo) - no Dockerfile, no extra dependencies.
 // Needs a running Docker daemon.
 //   ./gradlew bootBuildImage
