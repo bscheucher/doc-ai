@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -29,15 +31,22 @@ import org.springframework.test.context.ActiveProfiles;
  * structure and key values - a date in the right field, two times told apart, a score next to its
  * competency - and never the model's free text, which is allowed to vary.
  *
+ * <p>The lifecycle is per class so that one document costs one model call however many assertions
+ * are made about it. A test class therefore describes a single response, which is also what the
+ * assertions about two tables not being merged, or a score staying with its own row, actually mean.
+ *
  * <p>They assume the fixtures are reasonably fresh. Every date in them is written relative to the
- * day of generation, so once they are older than {@code docai.validation.max-days-in-past} the
- * assertions on an empty `probleme` list start failing on DATUM_ZU_ALT - a fault of the fixture,
- * not of the model. {@code ./gradlew generateFixtures} is the fix.
+ * day of generation, so once {@code arbeitsunfaehigVon} or {@code datumVon} is older than
+ * {@code docai.validation.max-days-in-past} the assertions on an empty `probleme` list start
+ * failing on {@code DATUM_ALT} - a fault of the fixture, not of the model.
+ * {@code ./gradlew generateFixtures} is the fix. Endpoints 1 and 4 are unaffected: neither runs a
+ * date through {@code SharedRules.datumsgrenzen}.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Tag("llm")
 @SpringBootTest
+@TestInstance(Lifecycle.PER_CLASS)
 @ActiveProfiles({ "local", "anthropic" })
 @EnabledIfEnvironmentVariable(named = "ANTHROPIC_API_KEY", matches = ".+")
 public @interface RealModelTest {

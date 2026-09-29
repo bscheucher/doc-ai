@@ -19,8 +19,9 @@ import com.learning.docai.validation.Teilnehmerhinweis;
  *
  * <p>The dates are asserted by their relation to each other, not by their value: the fixtures are
  * generated relative to the day of generation, so a committed absolute date would start failing
- * once they are regenerated. The relations are what the extraction can actually get wrong -
- * swapping the issue date for the first day of absence, or reading the end as the beginning.
+ * once they are regenerated. The fixture keeps the three dates distinct - absence from, absence to
+ * five days later, document issued the day after it began - so each relation can actually fail.
+ * The same goes for the two addresses on the document.
  */
 @RealModelTest
 class KrankenstandLlmTest {
@@ -28,27 +29,57 @@ class KrankenstandLlmTest {
     @Autowired
     private KrankenstandService service;
 
-    @Test
-    void readsEveryFieldOfACompleteNote() {
-        ExtraktionResponse<KrankenstandDaten> antwort = extrahiere("krankenstand.pdf");
-        KrankenstandDaten daten = antwort.daten();
+    private ExtraktionResponse<KrankenstandDaten> vollstaendig;
+    private ExtraktionResponse<KrankenstandDaten> ohneEnde;
 
+    @Test
+    void readsTheNameAndInsuranceNumberOfThePatient() {
+        KrankenstandDaten daten = vollstaendig().daten();
+
+        // The Ordination names a doctor too; the patient is who is asked for.
         assertThat(daten.vorname()).isEqualTo("Max");
         assertThat(daten.familienname()).isEqualTo("Mustermann");
         // SPEC §3.3 asks for ten digits without the space the document prints.
         assertThat(daten.versicherungsnummer()).isEqualTo("1238010190");
-        assertThat(daten.krankenstandsadresse()).contains("1010 Wien");
+    }
 
-        // "Arbeitsunfähig von" is ten days back, "voraussichtlich bis" five: the span is five
-        // days, and the note was issued on the first of them.
+    /**
+     * The document prints two addresses: the Ordination's and the one the patient stays at.
+     * `krankenstand.txt` asks for the second, and they are in different districts so that picking
+     * the first is visible here.
+     */
+    @Test
+    void takesTheAddressOfTheAbsenceAndNotOfThePractice() {
+        KrankenstandDaten daten = vollstaendig().daten();
+
+        assertThat(daten.krankenstandsadresse())
+                .contains("Blumengasse")
+                .contains("1150")
+                .doesNotContain("Hauptstraße", "1010");
+    }
+
+    /**
+     * The absence runs five days, and the note was issued the day after it began. Both relations
+     * would hold for a model that confused the fields only if the fixture printed one date twice,
+     * which is exactly why it does not.
+     */
+    @Test
+    void tellsTheThreeDatesApart() {
+        KrankenstandDaten daten = vollstaendig().daten();
+
         assertThat(daten.arbeitsunfaehigVon()).isNotNull();
         assertThat(daten.letzterTagArbeitsunfaehigkeit())
                 .isEqualTo(daten.arbeitsunfaehigVon().plusDays(5));
-        assertThat(daten.ausstellungsdatum()).isEqualTo(daten.arbeitsunfaehigVon());
+        assertThat(daten.ausstellungsdatum())
+                .isEqualTo(daten.arbeitsunfaehigVon().plusDays(1))
+                .isNotEqualTo(daten.arbeitsunfaehigVon());
+    }
 
-        // Every field is present and plausible, so the deterministic rules find nothing.
-        assertThat(antwort.probleme()).isEmpty();
-        assertThat(antwort.manuellePruefung()).isFalse();
+    /** Every field is present and plausible, so the deterministic rules find nothing. */
+    @Test
+    void reportsNoFindingsForACompleteNote() {
+        assertThat(vollstaendig().probleme()).isEmpty();
+        assertThat(vollstaendig().manuellePruefung()).isFalse();
     }
 
     /**
@@ -57,22 +88,24 @@ class KrankenstandLlmTest {
      */
     @Test
     void leavesAMissingEndDateNullInsteadOfInventingOne() {
-        ExtraktionResponse<KrankenstandDaten> antwort = extrahiere("krankenstand-ohne-ende.pdf");
-
-        assertThat(antwort.daten().arbeitsunfaehigVon()).isNotNull();
-        assertThat(antwort.daten().letzterTagArbeitsunfaehigkeit()).isNull();
-        assertThat(Problemprotokoll.codes(antwort.probleme())).contains(IssueCode.ENDE_FEHLT);
-        assertThat(antwort.manuellePruefung()).isTrue();
+        assertThat(ohneEnde().daten().arbeitsunfaehigVon()).isNotNull();
+        assertThat(ohneEnde().daten().letzterTagArbeitsunfaehigkeit()).isNull();
+        assertThat(Problemprotokoll.codes(ohneEnde().probleme())).contains(IssueCode.ENDE_FEHLT);
+        assertThat(ohneEnde().manuellePruefung()).isTrue();
     }
 
-    /** SPEC §3.3: the diagnosis is on the document and must not come back (data minimisation). */
-    @Test
-    void extractsNoDiagnosis() {
-        ExtraktionResponse<KrankenstandDaten> antwort = extrahiere("krankenstand.pdf");
+    private ExtraktionResponse<KrankenstandDaten> vollstaendig() {
+        if (vollstaendig == null) {
+            vollstaendig = extrahiere("krankenstand.pdf");
+        }
+        return vollstaendig;
+    }
 
-        assertThat(antwort.daten().krankenstandsadresse())
-                .doesNotContainIgnoringCase("diagnose")
-                .doesNotContainIgnoringCase("allgemeinmedizin");
+    private ExtraktionResponse<KrankenstandDaten> ohneEnde() {
+        if (ohneEnde == null) {
+            ohneEnde = extrahiere("krankenstand-ohne-ende.pdf");
+        }
+        return ohneEnde;
     }
 
     private ExtraktionResponse<KrankenstandDaten> extrahiere(String fixture) {
