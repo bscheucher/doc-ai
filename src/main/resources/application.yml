@@ -17,6 +17,14 @@ spring:
   ai:
     model:
       embedding: none
+  # Resource server per SPEC §7. Empty by default so the 'local' profile needs no tenant; any
+  # other profile fails at startup with the name of the missing property.
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${DOCAI_JWT_ISSUER_URI:}
+          audiences: ${DOCAI_JWT_AUDIENCE:}
 
 docai:
   intake:
@@ -30,11 +38,8 @@ docai:
     max-days-in-past: 90
     max-days-in-future: 14
     max-krankenstand-days: 60
-  # Resource server per SPEC §7. Empty by default so the 'local' profile needs no tenant; any
-  # other profile fails at startup with the name of the missing property.
+  # The app role of SPEC §7. Issuer and audience are Spring's own keys, under spring.security.
   security:
-    issuer-uri: ${DOCAI_JWT_ISSUER_URI:}
-    audience: ${DOCAI_JWT_AUDIENCE:}
     required-role: DocAi.Process
 
 logging:

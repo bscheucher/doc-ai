@@ -19,7 +19,7 @@ class AudienceValidatorTest {
 
     private static final String AUDIENCE = "api://doc-ai";
 
-    private final AudienceValidator validator = new AudienceValidator(AUDIENCE);
+    private final AudienceValidator validator = new AudienceValidator(List.of(AUDIENCE));
 
     @Test
     void acceptsATokenIssuedForThisApi() {
