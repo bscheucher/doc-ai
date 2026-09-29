@@ -23,9 +23,11 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.learning.docai.ai.AiResult;
 import com.learning.docai.ai.DocumentAiClient;
+import com.learning.docai.api.ApiEndpoint;
 import com.learning.docai.api.DocAiException;
 import com.learning.docai.api.ErrorType;
 import com.learning.docai.api.GlobalExceptionHandler;
+import com.learning.docai.api.MetrikRekorder;
 import com.learning.docai.api.RequestIdFilter;
 import com.learning.docai.config.IntakeProperties;
 import com.learning.docai.intake.DocumentIntakeService;
@@ -41,17 +43,19 @@ class KlassifikationControllerTest {
 
     private final DocumentAiClient aiClient = mock(DocumentAiClient.class);
 
+    private final MetrikRekorder rekorder = new MetrikRekorder();
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         DocumentIntakeService intake =
                 new DocumentIntakeService(new IntakeProperties(150, 1600, 5));
-        KlassifikationController controller =
-                new KlassifikationController(new KlassifikationService(intake, aiClient));
+        KlassifikationController controller = new KlassifikationController(
+                new KlassifikationService(intake, aiClient, rekorder.metrics()));
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(rekorder.metrics()))
                 .addFilters(new RequestIdFilter())
                 .build();
     }
@@ -94,6 +98,43 @@ class KlassifikationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.typ").value("UNBEKANNT"))
                 .andExpect(jsonPath("$.manuellePruefung").value(true));
+    }
+
+    /**
+     * SPEC §10: a classification that needs no review counts as `ok`, and UNBEKANNT - the one
+     * case that sets manuellePruefung here - as `review`. The model call is timed with the
+     * duration the client reported, and its tokens are counted per direction.
+     */
+    @Test
+    void recordsTheMetricsOfTheSuccessPath() throws Exception {
+        answerWith(Dokumenttyp.KRANKENSTANDSBESTAETIGUNG, "OEGK-Formular.");
+        mockMvc.perform(multipart("/api/v1/klassifikation").file(pdf()))
+                .andExpect(status().isOk());
+
+        answerWith(Dokumenttyp.UNBEKANNT, "Kein zuordenbares Formular.");
+        mockMvc.perform(multipart("/api/v1/klassifikation").file(pdf()))
+                .andExpect(status().isOk());
+
+        assertThat(rekorder.anfragen(ApiEndpoint.KLASSIFIKATION, "ok")).isEqualTo(1);
+        assertThat(rekorder.anfragen(ApiEndpoint.KLASSIFIKATION, "review")).isEqualTo(1);
+        assertThat(rekorder.anfragen(ApiEndpoint.KLASSIFIKATION, "error")).isZero();
+        assertThat(rekorder.modellaufrufe(ApiEndpoint.KLASSIFIKATION)).isEqualTo(2);
+        assertThat(rekorder.modelldauerMs(ApiEndpoint.KLASSIFIKATION)).isEqualTo(3000);
+        assertThat(rekorder.tokens("input")).isEqualTo(2400);
+        assertThat(rekorder.tokens("output")).isEqualTo(84);
+    }
+
+    /** A failed request is one `error` and no model-call sample (SPEC §10). */
+    @Test
+    void recordsAFailureWithoutAModelCall() throws Exception {
+        byte[] gif = { 'G', 'I', 'F', '8', '9', 'a', 0x01, 0x00 };
+
+        mockMvc.perform(multipart("/api/v1/klassifikation").file(filePart(gif)))
+                .andExpect(status().isUnsupportedMediaType());
+
+        assertThat(rekorder.anfragen(ApiEndpoint.KLASSIFIKATION, "error")).isEqualTo(1);
+        assertThat(rekorder.anfragen(ApiEndpoint.KLASSIFIKATION, "ok")).isZero();
+        assertThat(rekorder.modellaufrufe(ApiEndpoint.KLASSIFIKATION)).isZero();
     }
 
     @Test

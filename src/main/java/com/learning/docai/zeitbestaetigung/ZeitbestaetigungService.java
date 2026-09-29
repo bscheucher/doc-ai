@@ -8,6 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.learning.docai.ai.AiResult;
 import com.learning.docai.ai.DocumentAiClient;
 import com.learning.docai.ai.Prompts;
+import com.learning.docai.api.ApiEndpoint;
+import com.learning.docai.api.DocAiMetrics;
 import com.learning.docai.api.ExtraktionResponse;
 import com.learning.docai.api.Extraktionstyp;
 import com.learning.docai.intake.DocumentIntakeService;
@@ -32,6 +34,7 @@ public class ZeitbestaetigungService {
     private final DocumentIntakeService intake;
     private final DocumentAiClient aiClient;
     private final ZeitbestaetigungValidator validator;
+    private final DocAiMetrics metrics;
 
     public ExtraktionResponse<ZeitbestaetigungDaten> extrahiere(MultipartFile file,
             Teilnehmerhinweis hinweis, String requestId) {
@@ -39,8 +42,12 @@ public class ZeitbestaetigungService {
         PageImages pages = intake.toPageImages(file);
         AiResult<ZeitbestaetigungDaten> result =
                 aiClient.extract(INSTRUCTION, pages, ZeitbestaetigungDaten.class);
+        metrics.modellaufruf(ApiEndpoint.ZEITBESTAETIGUNG, result.provider(), result.model(),
+                result.inputTokens(), result.outputTokens(), result.durationMs());
 
         List<ValidationIssue> probleme = validator.pruefe(result.value(), hinweis);
+
+        metrics.anfrage(ApiEndpoint.ZEITBESTAETIGUNG, !probleme.isEmpty());
 
         // Only codes, never the values they are about (CLAUDE.md hard rules).
         log.info("Zeitbestaetigung: seiten={} probleme={} requestId={}",

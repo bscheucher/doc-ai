@@ -31,9 +31,11 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.learning.docai.ai.AiResult;
 import com.learning.docai.ai.DocumentAiClient;
+import com.learning.docai.api.ApiEndpoint;
 import com.learning.docai.api.DocAiException;
 import com.learning.docai.api.ErrorType;
 import com.learning.docai.api.GlobalExceptionHandler;
+import com.learning.docai.api.MetrikRekorder;
 import com.learning.docai.api.RequestIdFilter;
 import com.learning.docai.config.IntakeProperties;
 import com.learning.docai.config.ValidationProperties;
@@ -54,6 +56,8 @@ class KrankenstandControllerTest {
 
     private final DocumentAiClient aiClient = mock(DocumentAiClient.class);
 
+    private final MetrikRekorder rekorder = new MetrikRekorder();
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -64,10 +68,10 @@ class KrankenstandControllerTest {
 
         KrankenstandService service = new KrankenstandService(
                 new DocumentIntakeService(new IntakeProperties(150, 1600, 5)), aiClient,
-                new KrankenstandValidator(shared, validation));
+                new KrankenstandValidator(shared, validation), rekorder.metrics());
 
         mockMvc = MockMvcBuilders.standaloneSetup(new KrankenstandController(service))
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(rekorder.metrics()))
                 .addFilters(new RequestIdFilter())
                 // Spring Boot configures these two; the standalone builder does not, and would
                 // write LocalDate as [2026,3,15] and read parts as ISO-8859-1.
@@ -116,6 +120,25 @@ class KrankenstandControllerTest {
                 .andExpect(jsonPath("$.probleme[0].code").value("PFLICHTFELD_FEHLT"))
                 .andExpect(jsonPath("$.probleme[0].schweregrad").value("FEHLER"))
                 .andExpect(jsonPath("$.probleme[0].meldung").isNotEmpty());
+    }
+
+    /**
+     * SPEC §10: `manuellePruefung` decides between `ok` and `review`, which for endpoints 2-4
+     * means a clean document counts as `ok` and any finding as `review`.
+     */
+    @Test
+    void recordsTheOutcomeOfEachRequest() throws Exception {
+        answerWith(vollstaendig());
+        mockMvc.perform(multipart(PATH).file(pdf())).andExpect(status().isOk());
+
+        answerWith(new KrankenstandDaten(null, "Müller", GUELTIGE_SVNR, null, HEUTE,
+                HEUTE.plusDays(3), HEUTE));
+        mockMvc.perform(multipart(PATH).file(pdf())).andExpect(status().isOk());
+
+        assertThat(rekorder.anfragen(ApiEndpoint.KRANKENSTAND, "ok")).isEqualTo(1);
+        assertThat(rekorder.anfragen(ApiEndpoint.KRANKENSTAND, "review")).isEqualTo(1);
+        assertThat(rekorder.modellaufrufe(ApiEndpoint.KRANKENSTAND)).isEqualTo(2);
+        assertThat(rekorder.tokens("input")).isEqualTo(2400);
     }
 
     @Test

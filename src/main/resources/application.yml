@@ -54,11 +54,19 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics
+        include: health, info, metrics, prometheus
   endpoint:
     health:
       probes:
         enabled: true
+
+# SPEC §10. Only /actuator/health is public (SPEC §7), so the schema and the UI need a token
+# in every profile but 'local' - which is the profile they are meant for.
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 
 ---
 spring:
@@ -93,3 +101,30 @@ spring:
           model: qwen2.5vl:7b
           num-ctx: 16384
           temperature: 0.0
+
+---
+spring:
+  config:
+    activate:
+      on-profile: eval
+  main:
+    # SPEC §12: a batch run over eval/input, not a service. No port is opened, so the eval
+    # profile needs no security settings either.
+    web-application-type: none
+
+docai:
+  eval:
+    input: eval/input
+    output: eval/output
+    expected: eval/expected
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+springdoc:
+  swagger-ui:
+    # SPEC §10: the UI is a development aid and is not served in production. The schema at
+    # /v3/api-docs stays available behind a token, so a client generator still works.
+    enabled: false

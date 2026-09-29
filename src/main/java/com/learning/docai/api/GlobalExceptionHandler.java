@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -28,8 +29,11 @@ import lombok.extern.slf4j.Slf4j;
  * declaring our own {@code @ExceptionHandler} for those types would be an ambiguous mapping.
  */
 @Slf4j
+@RequiredArgsConstructor
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    private final DocAiMetrics metrics;
 
     @ExceptionHandler(DocAiException.class)
     public ResponseEntity<Object> handleDocAi(DocAiException ex, WebRequest request) {
@@ -102,6 +106,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         if (body instanceof ProblemDetail problem) {
             String requestId = RequestIdFilter.currentRequestId(request);
             problem.setProperty(RequestIdFilter.ATTRIBUTE, requestId);
+            metrics.fehler(ApiEndpoint.fromPath(endpoint(request)));
             log.warn("Request failed: endpoint={} status={} code={} requestId={}",
                     endpoint(request), statusCode.value(), problem.getTitle(), requestId);
         }

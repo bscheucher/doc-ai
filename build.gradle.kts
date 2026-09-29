@@ -52,6 +52,12 @@ dependencyManagement {
     }
 }
 
+// SPEC §10 exposes the actuator `info` endpoint. Without this it is reachable but empty:
+// the build-info contributor needs META-INF/build-info.properties, which this task writes.
+springBoot {
+    buildInfo()
+}
+
 tasks.named<Test>("test") {
     // Deliberately small: the intake tests assert that a document cannot make the service
     // allocate an unbounded raster, and that only holds if the heap is not generous.

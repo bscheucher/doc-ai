@@ -6,6 +6,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.learning.docai.ai.AiResult;
 import com.learning.docai.ai.DocumentAiClient;
 import com.learning.docai.ai.Prompts;
+import com.learning.docai.api.ApiEndpoint;
+import com.learning.docai.api.DocAiMetrics;
 import com.learning.docai.intake.DocumentIntakeService;
 import com.learning.docai.intake.PageImages;
 
@@ -25,11 +27,14 @@ public class KlassifikationService {
 
     private final DocumentIntakeService intake;
     private final DocumentAiClient aiClient;
+    private final DocAiMetrics metrics;
 
     public KlassifikationResponse klassifiziere(MultipartFile file, String requestId) {
         PageImages pages = intake.toPageImages(file);
         AiResult<KlassifikationErgebnis> result =
                 aiClient.extract(INSTRUCTION, pages, KlassifikationErgebnis.class);
+        metrics.modellaufruf(ApiEndpoint.KLASSIFIKATION, result.provider(), result.model(),
+                result.inputTokens(), result.outputTokens(), result.durationMs());
 
         // A model that answers with an unknown or absent type is treated as UNBEKANNT rather
         // than as a failure: the document is then reviewed by a person, which is the safe end.
@@ -37,6 +42,8 @@ public class KlassifikationService {
         // as null, because Jackson does not call a creator for a field the model left out.
         Dokumenttyp typ = result.value().typ() == null ? Dokumenttyp.UNBEKANNT : result.value().typ();
         boolean manuellePruefung = typ == Dokumenttyp.UNBEKANNT;
+
+        metrics.anfrage(ApiEndpoint.KLASSIFIKATION, manuellePruefung);
 
         log.info("Klassifikation: typ={} manuellePruefung={} seiten={} requestId={}",
                 typ, manuellePruefung, pages.pageCount(), requestId);

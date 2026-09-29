@@ -37,4 +37,6 @@ out/
 .vscode/
 
 ### doc-ai ###
-eval/
+# The evaluation tool's working directory (SPEC §12). Anchored to the repository root on
+# purpose: an unanchored `eval/` also matches the eval source package.
+/eval/
