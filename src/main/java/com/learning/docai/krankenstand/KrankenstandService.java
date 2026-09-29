@@ -8,6 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.learning.docai.ai.AiResult;
 import com.learning.docai.ai.DocumentAiClient;
 import com.learning.docai.ai.Prompts;
+import com.learning.docai.api.ApiEndpoint;
+import com.learning.docai.api.DocAiMetrics;
 import com.learning.docai.api.ExtraktionResponse;
 import com.learning.docai.api.Extraktionstyp;
 import com.learning.docai.intake.DocumentIntakeService;
@@ -33,6 +35,7 @@ public class KrankenstandService {
     private final DocumentIntakeService intake;
     private final DocumentAiClient aiClient;
     private final KrankenstandValidator validator;
+    private final DocAiMetrics metrics;
 
     public ExtraktionResponse<KrankenstandDaten> extrahiere(MultipartFile file,
             Teilnehmerhinweis hinweis, String requestId) {
@@ -40,8 +43,12 @@ public class KrankenstandService {
         PageImages pages = intake.toPageImages(file);
         AiResult<KrankenstandDaten> result =
                 aiClient.extract(INSTRUCTION, pages, KrankenstandDaten.class);
+        metrics.modellaufruf(ApiEndpoint.KRANKENSTAND, result.provider(), result.model(),
+                result.inputTokens(), result.outputTokens(), result.durationMs());
 
         List<ValidationIssue> probleme = validator.pruefe(result.value(), hinweis);
+
+        metrics.anfrage(ApiEndpoint.KRANKENSTAND, !probleme.isEmpty());
 
         // Only codes, never the values they are about (CLAUDE.md hard rules).
         log.info("Krankenstand: seiten={} probleme={} requestId={}",

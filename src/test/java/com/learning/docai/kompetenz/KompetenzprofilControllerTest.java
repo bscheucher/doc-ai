@@ -33,9 +33,11 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.learning.docai.ai.AiResult;
 import com.learning.docai.ai.DocumentAiClient;
+import com.learning.docai.api.ApiEndpoint;
 import com.learning.docai.api.DocAiException;
 import com.learning.docai.api.ErrorType;
 import com.learning.docai.api.GlobalExceptionHandler;
+import com.learning.docai.api.MetrikRekorder;
 import com.learning.docai.api.RequestIdFilter;
 import com.learning.docai.config.IntakeProperties;
 import com.learning.docai.config.ValidationProperties;
@@ -53,6 +55,8 @@ class KompetenzprofilControllerTest {
 
     private final DocumentAiClient aiClient = mock(DocumentAiClient.class);
 
+    private final MetrikRekorder rekorder = new MetrikRekorder();
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -62,10 +66,10 @@ class KompetenzprofilControllerTest {
 
         KompetenzprofilService service = new KompetenzprofilService(
                 new DocumentIntakeService(new IntakeProperties(150, 1600, 5)), aiClient,
-                new KompetenzprofilValidator(shared));
+                new KompetenzprofilValidator(shared), rekorder.metrics());
 
         mockMvc = MockMvcBuilders.standaloneSetup(new KompetenzprofilController(service))
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(rekorder.metrics()))
                 .addFilters(new RequestIdFilter())
                 // Spring Boot configures these two; the standalone builder does not, and would
                 // write LocalDate as [1985,7,13] and read parts as ISO-8859-1.
@@ -143,6 +147,20 @@ class KompetenzprofilControllerTest {
                 .andExpect(jsonPath("$.daten.fachlich.length()").value(1))
                 .andExpect(jsonPath("$.probleme[0].feld").value("fachlich[0]"))
                 .andExpect(jsonPath("$.probleme[0].code").value("BEZEICHNUNG_OHNE_SCORE"));
+    }
+
+    /** SPEC §10: a clean document is `ok`, a finding makes it `review`. */
+    @Test
+    void recordsTheOutcomeOfEachRequest() throws Exception {
+        answerWith(vollstaendig());
+        mockMvc.perform(multipart(PATH).file(pdf())).andExpect(status().isOk())
+                .andExpect(jsonPath("$.manuellePruefung").value(false));
+
+        assertThat(rekorder.anfragen(ApiEndpoint.KOMPETENZPROFIL, "ok")).isEqualTo(1);
+        assertThat(rekorder.anfragen(ApiEndpoint.KOMPETENZPROFIL, "review")).isZero();
+        assertThat(rekorder.modellaufrufe(ApiEndpoint.KOMPETENZPROFIL)).isEqualTo(1);
+        assertThat(rekorder.modelldauerMs(ApiEndpoint.KOMPETENZPROFIL)).isEqualTo(2100);
+        assertThat(rekorder.tokens("output")).isEqualTo(180);
     }
 
     @Test

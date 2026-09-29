@@ -8,6 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.learning.docai.ai.AiResult;
 import com.learning.docai.ai.DocumentAiClient;
 import com.learning.docai.ai.Prompts;
+import com.learning.docai.api.ApiEndpoint;
+import com.learning.docai.api.DocAiMetrics;
 import com.learning.docai.api.ExtraktionResponse;
 import com.learning.docai.api.Extraktionstyp;
 import com.learning.docai.intake.DocumentIntakeService;
@@ -33,6 +35,7 @@ public class KompetenzprofilService {
     private final DocumentIntakeService intake;
     private final DocumentAiClient aiClient;
     private final KompetenzprofilValidator validator;
+    private final DocAiMetrics metrics;
 
     public ExtraktionResponse<KompetenzprofilDaten> extrahiere(MultipartFile file,
             String requestId) {
@@ -40,11 +43,15 @@ public class KompetenzprofilService {
         PageImages pages = intake.toPageImages(file);
         AiResult<KompetenzprofilDaten> result =
                 aiClient.extract(INSTRUCTION, pages, KompetenzprofilDaten.class);
+        metrics.modellaufruf(ApiEndpoint.KOMPETENZPROFIL, result.provider(), result.model(),
+                result.inputTokens(), result.outputTokens(), result.durationMs());
 
         // Normalised here for the response; the validator normalises again for its own safety,
         // which is idempotent and keeps the indices of the two in step.
         KompetenzprofilDaten daten = result.value().normalisiert();
         List<ValidationIssue> probleme = validator.pruefe(daten);
+
+        metrics.anfrage(ApiEndpoint.KOMPETENZPROFIL, !probleme.isEmpty());
 
         // Only codes, never the values they are about (CLAUDE.md hard rules).
         log.info("Kompetenzprofil: seiten={} probleme={} requestId={}",

@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,9 +38,15 @@ import lombok.extern.slf4j.Slf4j;
  * {@code @ConditionalOnMissingBean(JwtDecoder.class)}), which is deliberate: Boot treats an
  * empty audience list as "no audience check", where §7 wants a deployment that cannot name its
  * audience to refuse to start rather than accept every token in the tenant.
+ *
+ * <p>Restricted to servlet applications because of the `eval` profile (SPEC §12), which runs the
+ * batch tool with no web server: there is no {@code HttpSecurity} to build a chain from, and
+ * nothing listening that would need one. Any profile that does serve HTTP still gets either this
+ * chain or {@link LocalSecurityConfig}.
  */
 @Slf4j
 @Configuration
+@ConditionalOnWebApplication(type = Type.SERVLET)
 @Profile("!local | prod")
 @RequiredArgsConstructor
 public class SecurityConfig {

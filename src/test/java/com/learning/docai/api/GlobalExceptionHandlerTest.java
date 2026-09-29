@@ -43,6 +43,8 @@ class GlobalExceptionHandlerTest {
 
     private static final String PROBLEM_TYPE = "https://doc-ai/errors/";
 
+    private final MetrikRekorder rekorder = new MetrikRekorder();
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -50,7 +52,7 @@ class GlobalExceptionHandlerTest {
         DocumentIntakeService service =
                 new DocumentIntakeService(new IntakeProperties(150, 1600, 5));
         mockMvc = MockMvcBuilders.standaloneSetup(new IntakeTestController(service))
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(rekorder.metrics()))
                 .addFilters(new RequestIdFilter())
                 .build();
     }
@@ -113,6 +115,25 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(multipart("/test/boom").file(filePart(new byte[] { 1, 2, 3 })))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.type").value(PROBLEM_TYPE + "internal-error"));
+    }
+
+    /**
+     * SPEC §10: every problem response is one `docai.requests` with outcome `error`. Counted
+     * here rather than in the services, because an unsupported type or an oversized upload
+     * never reaches one. These test paths are not API paths, so the `endpoint` tag folds to
+     * `unbekannt` - the bound that keeps a stray URI from opening its own time series.
+     */
+    @Test
+    void countsEveryProblemResponseAsAnError() throws Exception {
+        byte[] gif = { 'G', 'I', 'F', '8', '9', 'a', 0x01, 0x00 };
+
+        mockMvc.perform(multipart("/test/intake").file(filePart(gif)))
+                .andExpect(status().isUnsupportedMediaType());
+        mockMvc.perform(multipart("/test/boom").file(filePart(new byte[] { 1, 2, 3 })))
+                .andExpect(status().isInternalServerError());
+
+        assertThat(rekorder.anfragen(ApiEndpoint.UNBEKANNT, "error")).isEqualTo(2);
+        assertThat(rekorder.anfragen(ApiEndpoint.UNBEKANNT, "ok")).isZero();
     }
 
     @Test
