@@ -84,8 +84,9 @@ class ProfileGuardTest {
                 .web(WebApplicationType.SERVLET)
                 .profiles(profiles)
                 .properties("server.port=0",
-                        "docai.security.issuer-uri=https://login.microsoftonline.com/t/v2.0",
-                        "docai.security.audience=api://doc-ai-test",
+                        "spring.security.oauth2.resourceserver.jwt.issuer-uri="
+                                + "https://login.microsoftonline.com/t/v2.0",
+                        "spring.security.oauth2.resourceserver.jwt.audiences=api://doc-ai-test",
                         "spring.ai.anthropic.api-key=test-key-not-used")
                 .run();
     }

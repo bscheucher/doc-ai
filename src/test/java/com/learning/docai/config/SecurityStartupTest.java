@@ -14,20 +14,25 @@ import com.learning.docai.DocAiApplication;
  */
 class SecurityStartupTest {
 
+    private static final String ISSUER = "spring.security.oauth2.resourceserver.jwt.issuer-uri";
+    private static final String AUDIENCES = "spring.security.oauth2.resourceserver.jwt.audiences";
+
     @Test
     void refusesToStartWithoutAnIssuer() {
-        assertThatThrownBy(() -> start("--docai.security.issuer-uri="))
+        assertThatThrownBy(() -> start("--" + ISSUER + "="))
                 .rootCause()
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("docai.security.issuer-uri");
+                .hasMessageContaining(ISSUER);
     }
 
     @Test
     void refusesToStartWithoutAnAudience() {
-        assertThatThrownBy(() -> start("--docai.security.audience="))
+        // Boot's own decoder would read an empty list as "no audience check" and accept every
+        // token in the tenant; §7 wants the deployment to stop instead.
+        assertThatThrownBy(() -> start("--" + AUDIENCES + "="))
                 .rootCause()
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("docai.security.audience");
+                .hasMessageContaining(AUDIENCES);
     }
 
     @Test
@@ -38,6 +43,21 @@ class SecurityStartupTest {
                 .rootCause()
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("docai.security.required-role");
+    }
+
+    /**
+     * The properties moved from `docai.security` to Spring's own keys (SPEC §7). A deployment
+     * still carrying the old ones would have them ignored, so the failure has to name them
+     * rather than only the key nobody configured.
+     */
+    @Test
+    void namesTheOldKeyWhenItIsStillSet() {
+        assertThatThrownBy(() -> start("--" + ISSUER + "=",
+                "--docai.security.issuer-uri=https://login.microsoftonline.com/alt/v2.0"))
+                .rootCause()
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("docai.security.issuer-uri")
+                .hasMessageContaining("rename it to " + ISSUER);
     }
 
     private static void start(String... args) {

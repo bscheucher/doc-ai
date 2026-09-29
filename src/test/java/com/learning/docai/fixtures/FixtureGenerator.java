@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -43,6 +44,13 @@ public final class FixtureGenerator {
 
     private static final DateTimeFormatter DATUM = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
+    /**
+     * The zone of the injected {@code Clock} (ClockConfig). The dates below are written
+     * against the same "today" the validator measures them against, so generating late in
+     * the evening on a machine in another zone cannot put a document a day off its window.
+     */
+    private static final ZoneId ZONE = ZoneId.of("Europe/Vienna");
+
     private static final PDFont NORMAL = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
     private static final PDFont FETT = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
 
@@ -56,7 +64,7 @@ public final class FixtureGenerator {
         Path ziel = Path.of(args.length > 0 ? args[0] : "src/test/resources/fixtures");
         Files.createDirectories(ziel);
 
-        LocalDate heute = LocalDate.now();
+        LocalDate heute = LocalDate.now(ZONE);
 
         krankenstand(ziel.resolve("krankenstand.pdf"), heute);
         krankenstandOhneEnde(ziel.resolve("krankenstand-ohne-ende.pdf"), heute);
@@ -131,9 +139,15 @@ public final class FixtureGenerator {
 
     /**
      * Two competency tables, certificates and interests, so the lists of SPEC §3.5 are all
-     * non-empty. The deliberately blank row is the one natif returned three of: it must not
-     * appear in the response, because KompetenzprofilDaten.normalisiert() drops it.
-     * SVNR 7895 220785 - check digit 5.
+     * non-empty. "Konfliktfaehigkeit" carries no score, which is the half-read row of §4.4:
+     * the response must report BEZEICHNUNG_OHNE_SCORE for ueberfachlich[3] and keep the row.
+     *
+     * <p>The rows that carry nothing at all - natif returned three of those for
+     * `ueberfachlich`, and KompetenzprofilDaten.normalisiert() drops them - cannot be put in a
+     * fixture: a row with neither label nor score leaves no mark on a rendered page, so there
+     * is nothing for the model to read. That path is covered by KompetenzprofilDatenTest.
+     *
+     * <p>SVNR 7895 220785 - check digit 5.
      */
     private static void kompetenzprofil(Path datei, LocalDate heute) throws IOException {
         schreibe(datei, List.of(
@@ -155,7 +169,7 @@ public final class FixtureGenerator {
                 text("Teamfähigkeit                                    90"),
                 text("Selbstständiges Arbeiten                         75"),
                 text("Kommunikationsfähigkeit                          85"),
-                text("                                                   "),
+                text("Konfliktfähigkeit"),
                 leer(),
                 fett("Zertifikate"),
                 text("ECDL Advanced"),
