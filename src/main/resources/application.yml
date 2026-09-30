@@ -82,7 +82,10 @@ spring:
         options:
           model: claude-sonnet-5
           max-tokens: 4096
-          temperature: 0.0
+          # No temperature here, and none is inherited either: the model answers 400
+          # "`temperature` is deprecated for this model". Spring AI defaults the option to 0.8
+          # whether or not it is configured, so AnthropicSamplingConfig clears it after binding.
+          # Deviation from SPEC 2 ("Temperature 0."), which predates the current models.
 
 ---
 spring:
