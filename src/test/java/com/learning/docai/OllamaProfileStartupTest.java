@@ -27,9 +27,9 @@ class OllamaProfileStartupTest {
 
     @Test
     void startsWithOllamaProfileWithoutARunningOllama() {
-        // Pinned deliberately: the local model is a deviation from SPEC 11, chosen to fit a
-        // 6 GB laptop GPU, and application.yml records the measurements behind it. Changing it
-        // should fail here so the next change is made knowingly rather than drifting.
+        // Pinned deliberately: SPEC 8 names this model and the VRAM budget behind it, and
+        // application.yml records the measurements. Changing it should fail here so the next
+        // change is made knowingly rather than drifting.
         assertThat(environment.getProperty("spring.ai.ollama.chat.options.model"))
                 .isEqualTo("gemma3:4b");
         assertThat(environment.getProperty("spring.ai.ollama.init.pull-model-strategy"))
