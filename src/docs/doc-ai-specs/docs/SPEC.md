@@ -289,9 +289,21 @@ Provider profiles (exactly one active), using `spring.ai.model.chat` to select t
 | Profile | Provider | Default model | Notes |
 |---------|----------|---------------|-------|
 | `anthropic` (default) | Anthropic API | `claude-sonnet-5` | key via `ANTHROPIC_API_KEY`; max-tokens 4096 |
-| `ollama` | local Ollama | `qwen2.5vl:7b` | base URL via `OLLAMA_BASE_URL`; `num-ctx: 16384` |
+| `ollama` | local Ollama | `gemma3:4b` | base URL via `OLLAMA_BASE_URL`; `num-ctx: 16384` |
 
 Model names are configuration, not code.
+
+The local model is the one entry in that table that depends on the machine, and it has a budget
+rather than a name: a vision model has to stay resident beside the `num-ctx: 16384` above, which
+on a 6 GB laptop GPU leaves roughly 5 GB. `gemma3:4b` is the default because it meets that on
+such a GPU (4.6 GB resident, fully on the GPU). A larger model is a reasonable local default only
+where there is VRAM for it, and the budget, not the name, is what has to hold.
+
+`qwen2.5vl:7b` was the default until it turned out not to load on a 6 GB GPU at all - the
+requirement sits in the weights and the vision projector rather than the KV cache, so lowering
+`num-ctx` does not recover it. Its 3B sibling is not a fallback either: it stays on the CPU
+whatever the context. Anything chosen here should be measured against the fixtures in
+`src/test/resources/fixtures/`, on the target machine, at the context above.
 
 ## 9. Dependencies
 
