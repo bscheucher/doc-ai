@@ -289,21 +289,35 @@ Provider profiles (exactly one active), using `spring.ai.model.chat` to select t
 | Profile | Provider | Default model | Notes |
 |---------|----------|---------------|-------|
 | `anthropic` (default) | Anthropic API | `claude-sonnet-5` | key via `ANTHROPIC_API_KEY`; max-tokens 4096 |
-| `ollama` | local Ollama | `gemma3:4b` | base URL via `OLLAMA_BASE_URL`; `num-ctx: 16384` |
+| `ollama` | local Ollama | `gemma3:4b` | base URL via `OLLAMA_BASE_URL`; `num-ctx: 16384`; wiring only, see below |
 
 Model names are configuration, not code.
 
-The local model is the one entry in that table that depends on the machine, and it has a budget
-rather than a name: a vision model has to stay resident beside the `num-ctx: 16384` above, which
-on a 6 GB laptop GPU leaves roughly 5 GB. `gemma3:4b` is the default because it meets that on
-such a GPU (4.6 GB resident, fully on the GPU). A larger model is a reasonable local default only
-where there is VRAM for it, and the budget, not the name, is what has to hold.
+The two profiles are not interchangeable. `anthropic` is the profile the endpoints are specified
+against: on the fixtures in `src/test/resources/fixtures/` it extracts every field correctly and
+classifies every document correctly (§12, measured 2026-09-30). The `ollama` profile exists so
+that the service can be run and developed without a hosted model - intake, rendering, validation,
+the error paths of §6 and the response envelope are all exercised through it - and not because a
+local model is currently an alternative for extraction.
 
-`qwen2.5vl:7b` was the default until it turned out not to load on a 6 GB GPU at all - the
-requirement sits in the weights and the vision projector rather than the KV cache, so lowering
-`num-ctx` does not recover it. Its 3B sibling is not a fallback either: it stays on the CPU
-whatever the context. Anything chosen here should be measured against the fixtures in
-`src/test/resources/fixtures/`, on the target machine, at the context above.
+That is a measurement rather than a caution. `gemma3:4b`, the current local default, returns
+schema-shaped filler instead of what the page says: one constant document class for every input,
+a placeholder insurance number, the same placeholder in every date field. One of 29 compared
+fields matched. Its validation issues are symptoms of that filler, so on this profile a 200 with
+issue codes means the model failed, not that the document was unusual - which makes a manual
+request against it a poor way to judge a change.
+
+A local model may be treated as a substitute for the hosted one once it clears §12 close to the
+hosted result on the same documents, and not before. Two constraints for whoever looks:
+
+- It has to stay resident beside the `num-ctx: 16384` above, which on a 6 GB laptop GPU leaves
+  roughly 5 GB. `gemma3:4b` meets that (4.6 GB, fully on the GPU) and is the default for that
+  reason alone. `qwen2.5vl:7b` does not load there at all, and the requirement sits in the weights
+  and the vision projector rather than the KV cache, so lowering `num-ctx` does not recover it;
+  its 3B sibling stays on the CPU whatever the context.
+- No model that fits 6 GB has yet been shown to do this task. The budget and the accuracy bar have
+  not so far been satisfiable together on that hardware, which is worth knowing before Q2 of §13
+  is decided in favour of local-only.
 
 ## 9. Dependencies
 
