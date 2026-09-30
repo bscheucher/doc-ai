@@ -101,7 +101,17 @@ spring:
         pull-model-strategy: never
       chat:
         options:
-          model: qwen2.5vl:7b
+          # Deviation from SPEC 11 ("qwen2.5vl:7b"), which assumes more VRAM than a 6 GB
+          # laptop GPU has. Measured on an RTX 4050 (6 GB) with 15 GB RAM, num-ctx as below:
+          #   qwen2.5vl:7b  refuses to load at any context - "requires more system memory
+          #                 (11.6 GiB) than is available"; the weights and vision projector,
+          #                 not the KV cache, so a smaller context does not help
+          #   qwen2.5vl:3b  loads, but allocates ~10 GB and lands 100% on the CPU, and took
+          #                 the Ollama server down when given an image
+          #   llava         runs 32% on the CPU, 35 s per page, and misses the document type
+          #   gemma3:4b     4.6 GB, 100% GPU, 4.5 s per page, reads type and date
+          # Anything larger than ~5 GB resident will not fit beside the 16384 context.
+          model: gemma3:4b
           num-ctx: 16384
           temperature: 0.0
 
