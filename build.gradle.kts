@@ -63,12 +63,36 @@ tasks.named<Test>("test") {
     // allocate an unbounded raster, and that only holds if the heap is not generous.
     maxHeapSize = "512m"
 
+    val includeLlmTests = project.hasProperty("includeLlmTests")
+    val anthropicApiKey = providers.environmentVariable("ANTHROPIC_API_KEY")
+
     useJUnitPlatform {
         // Real-model tests are tagged 'llm' and never run in CI.
         // Opt in with: ./gradlew test -PincludeLlmTests
-        if (!project.hasProperty("includeLlmTests")) {
+        if (!includeLlmTests) {
             excludeTags("llm")
         }
+    }
+
+    if (includeLlmTests) {
+        // The tag is only the first of the two locks on RealModelTest. The second is
+        // @EnabledIfEnvironmentVariable(named = "ANTHROPIC_API_KEY"), which *skips* - so asking
+        // for these tests without a key in the environment reported BUILD SUCCESSFUL with every
+        // real-model test silently skipped, a green build that verified nothing. Passing the flag
+        // is an explicit request for them to run, so here a missing key is an error, not a skip.
+        // The annotation stays as it is: it is what keeps a plain `./gradlew build` quiet.
+        doFirst {
+            if (anthropicApiKey.orNull.isNullOrBlank()) {
+                throw GradleException(
+                    "-PincludeLlmTests needs ANTHROPIC_API_KEY in the environment. Without it "
+                        + "every test tagged 'llm' is skipped and the build still passes."
+                )
+            }
+        }
+
+        // Nor do the task's inputs include the environment: exporting the key after a run that
+        // lacked it would leave `test` UP-TO-DATE and skip the real-model tests a second time.
+        outputs.upToDateWhen { false }
     }
 }
 
