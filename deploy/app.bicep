@@ -51,6 +51,19 @@ param minReplicas int = 1
 @minValue(1)
 param maxReplicas int = 5
 
+@description('''
+Public ingress. True for this project: it is a private learning exercise and the whole point is
+to call the endpoints from curl or a browser API client, which cannot reach a private address.
+
+What keeps it safe is authentication, not obscurity - `/api/**` needs an Entra token carrying
+`DocAi.Process` (SPEC §7), and a request without one is refused before it reaches a controller.
+What this does expose publicly is `/actuator/health`, which `SecurityConfig` permits on purpose
+because the platform's probes have no token, and `/v3/api-docs`, which stays behind a token.
+
+False only works in an environment built with VNet integration, which this one is not.
+''')
+param externalIngress bool = true
+
 var port = 8080
 
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
@@ -66,7 +79,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
     configuration: {
       activeRevisionsMode: 'Single'
       ingress: {
-        external: false
+        external: externalIngress
         targetPort: port
         transport: 'auto'
         allowInsecure: false
@@ -149,7 +162,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
-@description('Internal FQDN. Resolvable only from inside the VNet or a network peered with it.')
-output internalFqdn string = app.properties.configuration.ingress.fqdn
+@description('The app FQDN. Publicly resolvable while externalIngress is true.')
+output appFqdn string = app.properties.configuration.ingress.fqdn
 
 output latestRevisionName string = app.properties.latestRevisionName

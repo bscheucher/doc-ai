@@ -2,6 +2,13 @@
 // that pulls from the one into the other. Split from app.bicep because the app cannot be
 // created before its image exists, and the image cannot be pushed before the registry does.
 //
+// This is a private learning project with one operator and no other caller, so the environment
+// uses Azure-managed networking and the app is reachable over the public internet - that is the
+// point: the endpoints have to be callable from curl and a browser API client. There is no VNet
+// and no subnet. Authentication is what protects the API: every /api/** call needs an Entra
+// token carrying DocAi.Process, and only /actuator/health is open (the platform's probes have no
+// token). Git history has the earlier VNet-injected, internal-only variant if it is ever wanted.
+//
 //   az deployment group create -g <rg> -f deploy/infra.bicep -p @deploy/infra.parameters.json
 //
 // Safe to re-apply; deploy.sh runs it on every deployment.
@@ -20,22 +27,6 @@ param namePrefix string = 'docai'
 @allowed([ 'test', 'stage', 'prod' ])
 param environmentName string = 'test'
 
-@description('''
-Existing subnet for the Container Apps infrastructure. Leave empty to have this template create
-a VNet and subnet. Supply one when ibosNG already lives in a VNet: internal ingress is only
-reachable from inside the VNet (or something peered with it), so putting doc-ai in the caller's
-network is the point of choosing internal.
-
-The subnet must be at least /27 and delegated to Microsoft.App/environments.
-''')
-param infrastructureSubnetId string = ''
-
-@description('Address space for the VNet created when infrastructureSubnetId is empty.')
-param vnetAddressPrefix string = '10.40.0.0/23'
-
-@description('Address range for the created infrastructure subnet. Must be /27 or larger.')
-param infraSubnetPrefix string = '10.40.0.0/27'
-
 @description('Retention for the workspace the platform writes container logs to.')
 @minValue(30)
 @maxValue(730)
@@ -44,16 +35,6 @@ param logRetentionInDays int = 30
 var suffix = '${namePrefix}-${environmentName}'
 // Registry names are globally unique and allow no hyphens.
 var computedRegistryName = toLower('${namePrefix}${environmentName}${uniqueString(resourceGroup().id)}')
-var createNetwork = empty(infrastructureSubnetId)
-var createdVnetName = 'vnet-${suffix}'
-var subnetName = 'snet-aca-infra'
-// Built with resourceId() rather than read off the vnet resource: ARM does not reliably
-// short-circuit a ternary, so `createNetwork ? vnet.properties... : param` can still try to
-// resolve a vnet that was never deployed. resourceId() is string arithmetic and resolves either
-// way; the environment declares its dependency on the vnet explicitly instead.
-var effectiveSubnetId = createNetwork
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', createdVnetName, subnetName)
-  : infrastructureSubnetId
 
 resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: 'log-${suffix}'
@@ -61,30 +42,6 @@ resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   properties: {
     sku: { name: 'PerGB2018' }
     retentionInDays: logRetentionInDays
-  }
-}
-
-resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' = if (createNetwork) {
-  name: createdVnetName
-  location: location
-  properties: {
-    addressSpace: { addressPrefixes: [ vnetAddressPrefix ] }
-    subnets: [
-      {
-        name: subnetName
-        properties: {
-          addressPrefix: infraSubnetPrefix
-          // Required for a workload-profiles environment; without it the environment is
-          // rejected with a delegation error that does not name this subnet.
-          delegations: [
-            {
-              name: 'Microsoft.App.environments'
-              properties: { serviceName: 'Microsoft.App/environments' }
-            }
-          ]
-        }
-      }
-    ]
   }
 }
 
@@ -129,22 +86,18 @@ resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
         sharedKey: logs.listKeys().primarySharedKey
       }
     }
-    vnetConfiguration: {
-      // The decision behind this file: no public FQDN. Reachable only from inside the VNet.
-      internal: true
-      infrastructureSubnetId: effectiveSubnetId
-    }
+    // No vnetConfiguration: Azure manages the networking and the environment can carry a
+    // public FQDN. An environment's networking is fixed at creation - there is no switching
+    // between internal and external later, only rebuilding - so this is the one decision here
+    // that cannot be changed in place.
     workloadProfiles: [
       { name: 'Consumption', workloadProfileType: 'Consumption' }
     ]
     zoneRedundant: false
   }
-  dependsOn: createNetwork ? [ vnet ] : []
 }
 
 output environmentId string = environment.id
 output registryName string = registry.name
 output registryLoginServer string = registry.properties.loginServer
 output identityId string = identity.id
-output vnetName string = createNetwork ? createdVnetName : ''
-output acaInfrastructureSubnetId string = effectiveSubnetId

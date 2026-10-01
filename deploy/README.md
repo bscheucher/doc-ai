@@ -3,10 +3,21 @@
 Written for someone who has not used the Azure CLI before. Three parts: what has actually been
 done so far, how the CLI works, and how this deployment works end to end.
 
-The short version: the templates in this directory are finished and verified against live
-Azure, but **nothing has been deployed yet**. One thing is missing before it can be: the
-`ANTHROPIC_API_KEY`, see [What is still missing](#what-is-still-missing). Everything else —
-the Entra registrations, Docker, the image, the auth chain — is done and verified.
+**What this is.** doc-ai is a **private learning project** with a single operator and no other
+caller. The SPEC is written in the register of work software — it names ibosNG as the caller, and
+German domain terms throughout — but nothing else consumes this service, and this deployment
+exists so that one person can exercise the API from `curl` and a browser API client such as
+Hoppscotch. Read every "the caller" in this guide as "you, from your laptop". No integration with
+any other system is planned here, and no decision below should be weighed against one.
+
+That is why ingress is **public**. An earlier version of these templates put the app on a VNet
+with internal-only ingress, which is the right shape for a service another system calls from
+inside the same network — and the wrong shape for this one, because a private address cannot be
+reached from curl on a laptop, let alone from a browser. Git history has that variant.
+
+**What protects it is authentication, not obscurity.** Every `/api/**` call needs an Entra token
+carrying the `DocAi.Process` role (SPEC §7). `/actuator/health` is deliberately open, because the
+platform's own probes carry no token.
 
 ---
 
@@ -34,7 +45,7 @@ Three things, all free:
    `Microsoft.Network`. Registration is free, one-off per subscription, and a prerequisite for
    creating any resource of those kinds.
 3. **The Entra app registrations** — `doc-ai-api` with the `DocAi.Process` app role, and
-   `ibosng-docai-client` with that role granted to it. See
+   `docai-test-client` with that role granted to it. See
    [The Entra app registrations](#the-entra-app-registrations). App registrations are free and
    are directory objects, not subscription resources, so `az group delete` does **not** remove
    them.
@@ -50,14 +61,14 @@ built, but it is sitting in the local Docker daemon, which costs nothing.
 | `az bicep lint` on both templates | exit 0, no findings |
 | Parameters file vs. template parameters | nothing undefined, nothing required missing |
 | `az deployment group validate` (infra) | passes in germanywestcentral, northeurope, swedencentral, francecentral |
-| `az deployment group what-if` (infra) | **6 resources to create**, no errors |
+| `az deployment group what-if` (infra) | **4 resources to create**, no errors |
 | A real client-credentials token vs. what `SecurityConfig` checks | `iss`, `aud`, `roles` and `ver` all match |
 | `./gradlew bootBuildImage` | succeeds in 2m57s; 604MB, non-root `1002:1001` |
 | The built image's auth chain, run locally against live Entra | 401 / 401 / 415 — see [Smoke-testing the image locally](#smoke-testing-the-image-locally) |
 
-The six: the VNet with its `/27` delegated subnet, the Log Analytics workspace, the container
-registry with `adminUserEnabled: false`, the user-assigned identity, the `AcrPull` role
-assignment, and the Container Apps environment with `internal: true`.
+The four: the Log Analytics workspace, the container registry with `adminUserEnabled: false`, the
+user-assigned identity with its `AcrPull` role assignment, and the Container Apps environment on
+Azure-managed networking.
 
 ### One thing the verification found
 
@@ -225,11 +236,10 @@ required.
 | Resource | Purpose |
 |---|---|
 | **Log Analytics workspace** | Where the platform ships container stdout. `az containerapp logs show` reads from here |
-| **Virtual network + subnet** | The network the service lives in. The subnet must be `/27` or larger and delegated to `Microsoft.App/environments` |
 | **Container registry (ACR)** | Stores the image. `adminUserEnabled: false` — no username/password exists at all |
 | **User-assigned managed identity** | An identity for the app, with no password. Granted `AcrPull` so it can fetch its own image |
 | **`AcrPull` role assignment** | The grant itself, scoped to this one registry |
-| **Container Apps environment** | The boundary that holds apps: the VNet attachment, the log destination, `internal: true` |
+| **Container Apps environment** | The boundary that holds apps: the log destination and the networking. Built with **no** `vnetConfiguration`, which is what lets an app in it carry a public FQDN |
 | **Container app** | The service. Holds the image, env vars, secrets, probes and scaling rules |
 
 A **managed identity** is worth understanding because it replaces a password. Azure vouches for
@@ -281,15 +291,26 @@ supply its own secrets; `DOCAI_ENV_FILE=/some/other/env` points it elsewhere.
 6. **Applies `app.bicep`** with the image and the secrets, passed through a `0600` temporary file
    rather than on the command line — command-line arguments are visible to anyone who can run
    `ps`.
-7. **Prints** the revision name, the internal URL, and the commands to check health and tail logs.
+7. **Prints** the revision name, the public URL, and the commands to call it and to tail logs.
 
 Re-running it is safe.
 
-### What you get, and what you cannot reach
+### What you get
 
-Ingress is **internal**: the app has a URL, but it resolves only from inside the VNet. From your
-laptop it does not resolve at all. That is deliberate — see SPEC §13 Q1 — and it means
-"deployed successfully" has to be confirmed by asking the platform rather than by curling it:
+Ingress is **public**, so the app has an `https://` URL that resolves from anywhere and you call
+it with curl or Hoppscotch like any other API. See
+[Calling the endpoints](#calling-the-endpoints) for exactly how, including how to get a token.
+
+SPEC §13 Q1 asked whether Entra authentication was wanted from the start or whether network
+isolation would do for v1. For a solo learning project the answer is authentication alone:
+network isolation would only lock out the one person who needs in. The token check is not
+weakened by this — it was never the second barrier here, it is the only one.
+
+Two things are reachable without a token, both on purpose: `/actuator/health`, because the
+platform's probes have none, and nothing else. `/v3/api-docs` stays behind a token, and the
+Swagger UI is off entirely under `prod`.
+
+When something does not come up, the platform has the reason and curl does not:
 
 ```bash
 az containerapp revision show -g rg-docai-test -n doc-ai --revision <name> \
@@ -305,9 +326,7 @@ Expect **two** WARNs at startup, both expected:
   Swagger *UI* off and deliberately keeps the schema, which `SecurityConfig` leaves behind a token
   via `anyRequest().authenticated()` (SPEC §10). Nothing to fix.
 
-To let ibosNG reach it, set `infrastructureSubnetId` in `deploy/infra.parameters.json` to a
-subnet in ibosNG's own VNet, or peer the two networks. Left at its default the template builds
-its own VNet, which nothing else can reach.
+Neither is worth acting on, and neither indicates a misconfiguration.
 
 ---
 
@@ -366,7 +385,7 @@ to accept tokens for and an app role for callers to hold. Two registrations exis
 | | |
 |---|---|
 | `doc-ai-api` | The API itself. Its application ID is `DOCAI_JWT_AUDIENCE`. Declares the `DocAi.Process` app role |
-| `ibosng-docai-client` | The caller. Holds `DocAi.Process` by an admin-consented grant, and has one client secret |
+| `docai-test-client` | The caller — in practice you, from curl or Hoppscotch. Holds `DocAi.Process` by an admin-consented grant, and has one client secret |
 
 The IDs are not in this repository — they identify a tenant and are nobody else's business, even
 though they are not secrets. They are in `~/.config/docai/deploy.env` (mode `600`), which
@@ -408,7 +427,7 @@ Then the caller, and the grant that is what "admin consent" actually means:
 
 ```bash
 API_SP_ID=$(az ad sp create --id "$API_APP_ID" --query id -o tsv)
-CLIENT_APP_ID=$(az ad app create --display-name ibosng-docai-client \
+CLIENT_APP_ID=$(az ad app create --display-name docai-test-client \
     --sign-in-audience AzureADMyOrg --query appId -o tsv)
 CLIENT_SP_ID=$(az ad sp create --id "$CLIENT_APP_ID" --query id -o tsv)
 
@@ -465,10 +484,11 @@ az ad app delete --id <client-app-id>
 
 ## Smoke-testing the image locally
 
-Worth doing before every deployment, because the deployed app **cannot be curled at all** from
-outside the VNet — local is the only place the auth chain can be exercised end to end against the
-real image. A **dummy** API key is enough: the model is only called when a document is processed,
-so the context starts and every HTTP path works without the real key.
+Worth doing before a deployment rather than after it: the same image, the same profiles and the
+same live Entra tenant, with a round trip measured in seconds instead of minutes. It is the
+fastest way to find out that a token or a profile is wrong. A **dummy** API key is enough, because
+the model is only called when a document is actually processed, so the context starts and every
+HTTP path works without the real key.
 
 ```bash
 . ~/.config/docai/deploy.env     # for the issuer and audience; the key here can be a dummy
@@ -510,7 +530,7 @@ content in it, which is also what SPEC §7's logging rule asks for.
 
 ## Cost, and how to undo it
 
-Nothing billable exists yet. Once deployed, three of the six resources bill:
+Three of the four resources bill:
 
 - **ACR Basic** — a small fixed daily charge for the registry.
 - **Container Apps** — per vCPU-second and GiB-second. There is a monthly free grant, but
@@ -526,8 +546,10 @@ To remove everything:
 az group delete -n rg-docai-test --yes --no-wait
 ```
 
-That deletes all six resources and the images in the registry, and cannot be undone. The provider
-registrations stay, which is harmless and saves repeating the wait.
+That deletes all four resources and the images in the registry, and cannot be undone. The
+provider registrations stay, which is harmless and saves repeating the wait. The Entra app
+registrations also stay — they are directory objects rather than resources in this group, so they
+need `az ad app delete` (see [Undoing it](#undoing-it)).
 
 ---
 
@@ -540,7 +562,7 @@ registrations stay, which is harmless and saves repeating the wait.
 [ ] 4. Add ANTHROPIC_API_KEY to ~/.config/docai/deploy.env
 [ ] 5. ./deploy/deploy.sh rg-docai-test   (prefix with `sg docker -c` until you re-login)
 [ ] 6. Check the revision is running and read the logs
-[ ] 7. Decide on the VNet: peer with ibosNG, or set infrastructureSubnetId
+[ ] 7. Call the endpoints from curl or Hoppscotch
 [ ] 8. az group delete when the experiment is over
 ```
 

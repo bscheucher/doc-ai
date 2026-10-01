@@ -8,15 +8,6 @@
     "environmentName": {
       "value": "test"
     },
-    "infrastructureSubnetId": {
-      "value": ""
-    },
-    "vnetAddressPrefix": {
-      "value": "10.40.0.0/23"
-    },
-    "infraSubnetPrefix": {
-      "value": "10.40.0.0/27"
-    },
     "logRetentionInDays": {
       "value": 30
     }

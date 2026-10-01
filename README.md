@@ -187,14 +187,20 @@ applies `app.bicep`.
 | Probes | `/actuator/health/{liveness,readiness}`, public by `SecurityConfig` because the platform has no token |
 | Image tag | `<version>-<git-sha>`, never `:latest` |
 
-Ingress is **internal**: there is no public FQDN and the internal one resolves only inside the
-VNet. Left at its default, `infra.bicep` creates its own VNet, which nothing can reach — set
-`infrastructureSubnetId` in `deploy/infra.parameters.json` to a `/27`-or-larger subnet delegated
-to `Microsoft.App/environments` in the VNet ibosNG calls from, or peer the two. Outbound internet
-still works, which is what the Anthropic API needs.
+Ingress is **public**. This is a private learning project with one operator and no other caller,
+and the deployment exists so the endpoints can be called from `curl` or a browser API client such
+as Hoppscotch — a private address could not be. There is no VNet and no subnet; the Container Apps
+environment runs on Azure-managed networking. An earlier revision of these templates was
+VNet-injected and internal-only, which is the right shape when another system calls the service
+from inside the same network, and the wrong one here; git history has it.
 
-Callers authenticate as they do everywhere else (SPEC §7): a client-credentials token with the
-`DocAi.Process` app role. Internal ingress is the second barrier, not a replacement.
+Authentication is therefore the only barrier, and it is unchanged (SPEC §7): every `/api/**` call
+needs a client-credentials token carrying the `DocAi.Process` app role, and a request without one
+never reaches a controller. `/actuator/health` is open because the platform's probes have no
+token. `/v3/api-docs` stays behind a token and the Swagger UI is off under `prod`.
+
+`deploy/README.md` has the full walkthrough, including how to mint a token and call each
+endpoint.
 
 ### Data protection
 

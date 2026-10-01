@@ -65,8 +65,40 @@ done
 
 command -v az >/dev/null     || die "az CLI not found: https://learn.microsoft.com/cli/azure/install-azure-cli"
 command -v jq >/dev/null     || die "jq not found."
+command -v docker >/dev/null || die "docker not found."
 az account show >/dev/null 2>&1 || die "Not logged in. Run: az login"
-docker info >/dev/null 2>&1  || die "No reachable Docker daemon. bootBuildImage builds the image locally."
+
+# One cleanup for every temporary thing below: a second `trap ... EXIT` would replace the first
+# rather than add to it, and the API key lives in one of these files.
+cleanup_paths=()
+cleanup() { [[ ${#cleanup_paths[@]} -gt 0 ]] && rm -rf "${cleanup_paths[@]}"; }
+trap cleanup EXIT
+
+# Pin the daemon, and keep the credential helper out of it. Two faults hide here, and the second
+# only appears minutes in, after the image has been built:
+#
+#   1. More than one daemon can be running - a system dockerd on /var/run/docker.sock and Docker
+#      Desktop on its own socket. bootBuildImage and `docker push` resolve the daemon
+#      independently, so they can disagree, and then the push fails with "an image does not exist
+#      locally" for an image that was just built successfully. Resolving the current context once
+#      and exporting DOCKER_HOST makes both use the same one. Starting or stopping Docker Desktop
+#      rewrites the current context, so this is not a stable property of the machine.
+#   2. The config may name a credential helper. Docker Desktop's delegates to `pass`, which needs
+#      gpg to decrypt, which needs a passphrase prompt that a non-interactive deployment cannot
+#      answer - it fails with "gpg: decryption failed" however healthy the login was. A private
+#      config with no helper keeps the short-lived ACR token in a 0600 directory instead.
+if [[ -z "${DOCKER_HOST:-}" ]]; then
+    DOCKER_HOST="$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null || true)"
+    [[ -n "$DOCKER_HOST" ]] || die "Cannot read the Docker endpoint from the current context. Is Docker running?"
+fi
+export DOCKER_HOST
+docker_config_dir="$(mktemp -d)"
+chmod 700 "$docker_config_dir"
+cleanup_paths+=("$docker_config_dir")
+printf '{}\n' > "$docker_config_dir/config.json"
+export DOCKER_CONFIG="$docker_config_dir"
+
+docker info >/dev/null 2>&1 || die "No reachable Docker daemon at $DOCKER_HOST. bootBuildImage builds the image locally."
 
 version="$(./gradlew -q properties --property version 2>/dev/null | awk '/^version:/ {print $2}')"
 # Tagged by commit, never :latest - a running revision has to be traceable back to a build.
@@ -76,6 +108,7 @@ git diff --quiet HEAD -- || dirty="-dirty"
 TAG="${TAG:-${version}-${git_sha}${dirty}}"
 
 echo "==> doc-ai $TAG -> resource group $RESOURCE_GROUP ($LOCATION)"
+echo "    docker daemon $DOCKER_HOST"
 [[ -n "$dirty" ]] && echo "    working tree has uncommitted changes; tag marked -dirty"
 
 # Only when absent: `az group create` is idempotent only if the location also matches, and
@@ -119,7 +152,7 @@ echo "==> container app"
 # Via a parameters file, not -p key=value: command-line arguments are visible in `ps`.
 params_file="$(mktemp)"
 chmod 600 "$params_file"
-trap 'rm -f "$params_file"' EXIT
+cleanup_paths+=("$params_file")
 jq -n \
     --arg image "$image" \
     --arg environmentId "$environment_id" \
@@ -143,17 +176,34 @@ app_outputs="$(az deployment group create \
     --parameters "@$params_file" \
     --query properties.outputs -o json)"
 
-fqdn="$(jq -r .internalFqdn.value <<<"$app_outputs")"
+fqdn="$(jq -r .appFqdn.value <<<"$app_outputs")"
 revision="$(jq -r .latestRevisionName.value <<<"$app_outputs")"
 
 cat <<EOF
 
 ==> deployed
     revision   $revision
-    internal   https://$fqdn
-    health     https://$fqdn/actuator/health   (from inside the VNet only)
+    url        https://$fqdn
+    health     https://$fqdn/actuator/health
 
-Ingress is internal: that FQDN does not resolve from here. To check the revision came up:
+Ingress is public, so call it directly. /actuator/health needs no token:
+
+    curl -s https://$fqdn/actuator/health
+
+/api/** needs an Entra token carrying DocAi.Process - without one it is 401:
+
+    . ~/.config/docai/client-test.env
+    TOKEN=\$(curl -s -X POST \\
+      "https://login.microsoftonline.com/\$DOCAI_TEST_TENANT/oauth2/v2.0/token" \\
+      -d grant_type=client_credentials -d client_id="\$DOCAI_TEST_CLIENT_ID" \\
+      -d client_secret="\$DOCAI_TEST_CLIENT_SECRET" \\
+      -d scope="api://\$DOCAI_TEST_API_ID/.default" | jq -r .access_token)
+
+    curl -s -H "Authorization: Bearer \$TOKEN" \\
+      -F document=@src/test/resources/fixtures/<a-fixture>.pdf \\
+      https://$fqdn/api/v1/klassifikation
+
+If it did not come up, the platform rather than curl has the reason:
 
     az containerapp revision show -g $RESOURCE_GROUP -n $APP_NAME --revision $revision \\
         --query '{running:properties.runningState,healthy:properties.healthState,replicas:properties.replicas}'
