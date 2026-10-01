@@ -144,6 +144,67 @@ fields it names are compared — a reference that fixes two dates asks about tho
 **This calls a real model with whatever is in `eval/input`,** which makes it the one place where
 the data-protection constraint above applies directly.
 
+## Deploy
+
+Azure Container Apps, described by Bicep in `deploy/`. Nothing here is referenced by the
+application; it is deployment only.
+
+| File | What it creates |
+|------|-----------------|
+| `deploy/infra.bicep` | Container registry, Container Apps environment (**internal** ingress), user-assigned identity with `AcrPull`, Log Analytics workspace |
+| `deploy/app.bicep` | The container app: image, probes, scaling, environment, the API key as a secret |
+| `deploy/infra.parameters.json` | Names, region, network addresses |
+| `deploy/deploy.sh` | Applies both, with the image build in between |
+
+```bash
+az login
+ANTHROPIC_API_KEY=sk-...                                             \
+DOCAI_JWT_ISSUER_URI=https://login.microsoftonline.com/<guid>/v2.0   \
+DOCAI_JWT_AUDIENCE=<api-client-id>                                   \
+  ./deploy/deploy.sh rg-docai-test
+```
+
+The script needs `az`, `jq` and a reachable Docker daemon (the image is built locally by
+buildpacks, as `./gradlew bootBuildImage`). It is idempotent — re-running it applies the
+infrastructure unchanged and adds a revision.
+
+Two templates rather than one because the app cannot be created before its image exists and the
+image cannot be pushed before the registry does: `deploy.sh` applies `infra.bicep`, pushes, then
+applies `app.bicep`.
+
+### What the deployed app runs with
+
+| | |
+|---|---|
+| Profiles | `prod,anthropic` — Swagger UI off (SPEC §10), hosted model (SPEC §8) |
+| CPU / memory | 1.0 / 2.0Gi — PDFBox rasterises up to 5 pages at 150 dpi in memory; the 0.5/1Gi default is too tight |
+| Replicas | 1–5, scaled on 4 concurrent requests, `minReplicas: 1` so no caller waits on a JVM cold start |
+| Probes | `/actuator/health/{liveness,readiness}`, public by `SecurityConfig` because the platform has no token |
+| Image tag | `<version>-<git-sha>`, never `:latest` |
+
+Ingress is **internal**: there is no public FQDN and the internal one resolves only inside the
+VNet. Left at its default, `infra.bicep` creates its own VNet, which nothing can reach — set
+`infrastructureSubnetId` in `deploy/infra.parameters.json` to a `/27`-or-larger subnet delegated
+to `Microsoft.App/environments` in the VNet ibosNG calls from, or peer the two. Outbound internet
+still works, which is what the Anthropic API needs.
+
+Callers authenticate as they do everywhere else (SPEC §7): a client-credentials token with the
+`DocAi.Process` app role. Internal ingress is the second barrier, not a replacement.
+
+### Data protection
+
+These templates deploy the `anthropic` profile, which sends page images to the Anthropic API.
+**SPEC §7 permits that for synthetic documents only** until data protection approves it —
+Krankenstandsbestätigungen are GDPR Art. 9 health data, and §13 Q2 is open. The app logs a WARN
+at startup saying so (`HostedModelWarning`). Before real participant documents reach this
+deployment, either that approval exists or the provider has to change.
+
+The API key is a container app secret, taken from the environment by `deploy.sh` and written
+through a `0600` temporary file so it never appears in a command line. For an environment that
+sees real data, give the already-deployed identity (`id-docai-<env>`) `get` on a Key Vault secret
+and replace the `secrets` entry in `app.bicep` with a `keyVaultUrl` reference, so the key is not
+readable from the app's own configuration.
+
 ## Layout
 
 `com.learning.docai`, by feature: `intake` (upload validation, page images), `ai` (the only
