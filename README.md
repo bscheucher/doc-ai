@@ -21,6 +21,10 @@ call the matching extraction endpoint.
 Contracts, validation rules and error catalogue: `src/docs/doc-ai-specs/docs/SPEC.md`. It is the
 source of truth; this file only says how to run the thing.
 
+**To call the deployed service**, with curl or from [hoppscotch.io](https://hoppscotch.io):
+`src/docs/CALLING_THE_API.md`. Tested commands, real responses, and the two traps worth knowing in
+advance — the multipart part is named `file`, and a browser tab cannot reach the API at all.
+
 **Nothing is persisted.** Documents and extracted values are processed in memory, never written
 to disk and never cached. Krankenstandsbestätigungen are health data (GDPR Art. 9): the hosted
 model provider must not see real documents before data protection has approved it, and the
