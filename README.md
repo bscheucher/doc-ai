@@ -48,7 +48,7 @@ One model provider per profile (SPEC §8); business code never names a provider.
 | Profile | Model | Needs |
 |---------|-------|-------|
 | `anthropic` (default) | `claude-sonnet-5` | `ANTHROPIC_API_KEY` |
-| `ollama` | `qwen2.5vl:7b` | Ollama at `OLLAMA_BASE_URL`, default `http://localhost:11434` |
+| `ollama` | `gemma3:4b` | Ollama at `OLLAMA_BASE_URL`, default `http://localhost:11434` |
 | `local` | – | nothing; disables authentication, never together with `prod` |
 | `prod` | – | disables the Swagger UI |
 | `eval` | – | no web server; see below |
