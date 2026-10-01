@@ -1,6 +1,30 @@
 # doc-ai – Specification
 
-Status: draft v0.1 · Owner: Bernhard · Consumers: ibosNG backend (TN-Portal upload flow, Kompetenzprofile)
+Status: draft v0.1 · Owner: Bernhard · Consumers: none in production — see the note below
+
+> **This is a private learning project.** One operator, no other consumer, nothing in production.
+> This document is written as a realistic brief — an internal service replacing natif.ai workflows
+> for an ibosNG backend, with the domain vocabulary kept in German — because specifying and
+> building against a realistic brief is the exercise. That integration does not exist and is not
+> planned.
+>
+> So wherever this document says "the caller", "the consumer" or "ibosNG", read it as the
+> hypothetical caller the contract is designed for, not a system that will connect. The contracts,
+> validation rules and field mappings are meant literally and are implemented as written; only the
+> consumer is imagined. In practice the caller is `curl` or Hoppscotch from the author's laptop
+> against the deployed service — `deploy/README.md` has the commands.
+>
+> Two consequences worth naming where they bite:
+>
+> - **§13 Q1** asks whether Entra authentication is wanted from the start or whether network
+>   isolation is enough for v1. Answered in the deployment as: authentication, from the start, and
+>   no isolation. The deployed service has **public** ingress, because isolation would only lock
+>   out the one person who needs in. §7 is implemented exactly as written and is the only barrier —
+>   every `/api/**` call needs a token carrying `DocAi.Process` — with the client-credentials flow
+>   it describes coming from a test registration rather than an ibosNG backend.
+> - **§13 Q4** asks which remaining natif AMS fields the consumer actually uses. There is no
+>   consumer to ask, so it cannot be closed from inside the project; treat the field set as the
+>   author's choice rather than a requirement.
 
 ## 1. Purpose and scope
 
