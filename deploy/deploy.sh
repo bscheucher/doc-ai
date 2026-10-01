@@ -200,7 +200,7 @@ Ingress is public, so call it directly. /actuator/health needs no token:
       -d scope="api://\$DOCAI_TEST_API_ID/.default" | jq -r .access_token)
 
     curl -s -H "Authorization: Bearer \$TOKEN" \\
-      -F document=@src/test/resources/fixtures/<a-fixture>.pdf \\
+      -F file=@src/test/resources/fixtures/krankenstand.pdf \\
       https://$fqdn/api/v1/klassifikation
 
 If it did not come up, the platform rather than curl has the reason:

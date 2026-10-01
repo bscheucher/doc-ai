@@ -1,7 +1,11 @@
 # Deploying doc-ai to Azure Container Apps
 
 Written for someone who has not used the Azure CLI before. Three parts: what has actually been
-done so far, how the CLI works, and how this deployment works end to end.
+done, how the CLI works, and how this deployment works end to end.
+
+**It is deployed and working.** The endpoints answer from the public internet and have been called
+end to end with real documents — go straight to
+[Calling the endpoints](#calling-the-endpoints) for commands that have been run as written.
 
 **What this is.** doc-ai is a **private learning project** with a single operator and no other
 caller. The SPEC is written in the register of work software — it names ibosNG as the caller, and
@@ -330,14 +334,18 @@ Neither is worth acting on, and neither indicates a misconfiguration.
 
 ---
 
-## What is still missing
+## Nothing is outstanding
 
-One thing, and it is not in this repository.
+Every prerequisite is cleared. For the record, since each of them cost something to find:
 
-### `ANTHROPIC_API_KEY`
+| Was needed | How it stands |
+|---|---|
+| Entra app registrations | `doc-ai-api` with the `DocAi.Process` role, `docai-test-client` holding it by an admin-consented grant. See [The Entra app registrations](#the-entra-app-registrations) |
+| A usable Docker daemon | Two unrelated faults, both fixed. See [Docker, and why the usual advice is wrong](#docker-and-why-the-usual-advice-is-wrong) |
+| `ANTHROPIC_API_KEY` | In `~/.config/docai/deploy.env`, which `deploy.sh` reads by itself |
+| A way to reach the service | Public ingress, verified with curl. See [Calling the endpoints](#calling-the-endpoints) |
 
-The same key the `llm`-tagged tests use. Uncomment the line for it in
-`~/.config/docai/deploy.env`; it is the only value in that file still missing. Note that the
+The only one you have to think about again is the key, and only if it is rotated. Note that the
 [local smoke test](#smoke-testing-the-image-locally) does **not** need the real key — a dummy one
 starts the application and exercises every HTTP path, because the model is only called when a
 document is actually processed.
@@ -374,6 +382,38 @@ sg docker -c './deploy/deploy.sh rg-docai-test'
 `sg` stops being necessary once you have logged out and back in. Note that a new terminal *tab* is
 usually not enough: it inherits its groups from the desktop session, which started before the
 change.
+
+### A third fault, which only shows up minutes in
+
+Both of the above fail immediately. This one waits until the image has been built, which makes it
+far more annoying, and `deploy.sh` now defends against it.
+
+**More than one daemon can be running.** This machine has a system `dockerd` on
+`/var/run/docker.sock` *and* Docker Desktop on its own socket. `bootBuildImage` and `docker push`
+resolve the daemon independently, so they can pick different ones — and then the push fails with
+
+```
+An image does not exist locally with the tag: <registry>/doc-ai
+```
+
+for an image the build just reported as successful. Worse, starting or stopping Docker Desktop
+rewrites the current context, so `docker context use default` does not stay put: it was reverted
+mid-session here when Docker Desktop came up. `deploy.sh` resolves the current context once and
+exports `DOCKER_HOST`, so the build and the push cannot disagree.
+
+**And the credential helper can be unusable.** Docker Desktop sets `"credsStore": "desktop"`, whose
+helper delegates to `pass`, which needs `gpg`, which needs a passphrase prompt. A non-interactive
+deployment cannot answer one, so the push fails with
+
+```
+error getting credentials - ... gpg: decryption failed: No such file or directory
+```
+
+*after* `az acr login` has reported `Login Succeeded`, which is a confusing pair of messages. It
+works intermittently, because gpg-agent caches the passphrase for a while after any interactive
+use — so it can succeed once and fail an hour later with nothing changed. `deploy.sh` now points
+`DOCKER_CONFIG` at a private `0600` directory with no helper configured, holding only the
+short-lived ACR token.
 
 ---
 
@@ -482,6 +522,120 @@ az ad app delete --id <client-app-id>
 
 ---
 
+## Calling the endpoints
+
+Every command here was run against the live deployment and the output is what it actually
+returned. Replace the host with the one `deploy.sh` printed, or get it from Azure:
+
+```bash
+URL="https://$(az containerapp show -g rg-docai-test -n doc-ai \
+      --query properties.configuration.ingress.fqdn -o tsv)"
+```
+
+### Health, which needs no token
+
+```bash
+curl -s $URL/actuator/health
+# {"status":"UP","groups":["liveness","readiness"]}
+```
+
+This one is deliberately public: the platform's own liveness and readiness probes carry no token,
+so `SecurityConfig` permits the health endpoint by endpoint rather than by path.
+
+### Getting a token
+
+`/api/**` needs a client-credentials token carrying the `DocAi.Process` app role. Without one, or
+with a malformed one, every call is `401`:
+
+```bash
+. ~/.config/docai/client-test.env
+TOKEN=$(curl -s -X POST \
+  "https://login.microsoftonline.com/$DOCAI_TEST_TENANT/oauth2/v2.0/token" \
+  -d grant_type=client_credentials -d client_id="$DOCAI_TEST_CLIENT_ID" \
+  -d client_secret="$DOCAI_TEST_CLIENT_SECRET" \
+  -d scope="api://$DOCAI_TEST_API_ID/.default" | jq -r .access_token)
+```
+
+The token lasts about an hour. Mint a new one when calls start coming back `401` after having
+worked — that is the usual cause, not a broken deployment.
+
+### The four endpoints
+
+**The file part is named `file`.** Sending it under any other name gives a `400` with
+`missing-file`, which reads like the service is broken when it is only a typo.
+
+```bash
+cd src/test/resources/fixtures
+
+# 1 - classification
+curl -s -H "Authorization: Bearer $TOKEN" -F file=@krankenstand.pdf \
+     $URL/api/v1/klassifikation
+
+# 2 - Krankenstand, with the optional Teilnehmer hints
+curl -s -H "Authorization: Bearer $TOKEN" -F file=@krankenstand.pdf \
+     -F vorname=Max -F familienname=Mustermann -F "svnr=1238 010190" \
+     $URL/api/v1/extraktion/krankenstand
+
+# 3 - Zeitbestaetigung
+curl -s -H "Authorization: Bearer $TOKEN" -F file=@zeitbestaetigung.pdf \
+     $URL/api/v1/extraktion/zeitbestaetigung
+
+# 4 - Kompetenzprofil
+curl -s -H "Authorization: Bearer $TOKEN" -F file=@kompetenzprofil.pdf \
+     $URL/api/v1/extraktion/kompetenzprofil
+```
+
+Classification of `krankenstand.pdf` came back in 4.8s on a cold replica and about 2s after:
+
+```json
+{"typ":"KRANKENSTANDSBESTAETIGUNG",
+ "begruendung":"Das Formular einer Ärztin bestätigt Arbeitsunfähigkeit über einen Zeitraum von-bis.",
+ "manuellePruefung":false,
+ "metadaten":{"provider":"anthropic","modell":"claude-sonnet-5","seiten":1,
+              "inputTokens":3978,"outputTokens":86,"dauerMs":3193}}
+```
+
+`unbekannt.pdf` is an office-supplies invoice, and the useful thing is that it is **not** forced
+into a category — `"typ":"UNBEKANNT"` with `"manuellePruefung":true`.
+
+Pass a hint that disagrees with the document to watch the comparison rules fire. With
+`-F familienname=Mustermeier` against a document that says Mustermann:
+
+```json
+{"probleme":[{"feld":"familienname","code":"NAME_WEICHT_AB","schweregrad":"WARNUNG",
+              "meldung":"Name weicht vom uebergebenen Wert ab."}],
+ "manuellePruefung":true}
+```
+
+Note what the extraction does **not** contain: no diagnosis, no medical detail, nothing beyond the
+fields SPEC asks for, even though the document shows more. The SVNR also comes back normalised
+(`1238 010190` in, `1238010190` out).
+
+### From Hoppscotch
+
+Everything above works in [hoppscotch.io](https://hoppscotch.io) too, with one wrinkle worth
+knowing before it wastes an evening.
+
+1. Set the method to **POST** and the URL to `<URL>/api/v1/klassifikation`.
+2. Under **Authorization**, choose **Bearer** and paste the token from above.
+3. Under **Body**, choose **multipart/form-data**, add a field named exactly `file`, switch it to
+   the file type, and pick a fixture.
+
+**The wrinkle:** Hoppscotch runs in your browser, so the request is cross-origin, and this service
+sends no CORS headers — it was never meant for a browser. A browser will not show you a `401` or a
+`200` from a request it is not allowed to read; it reports a generic network or CORS failure
+instead, which looks identical to the service being down. Two ways round it, both official:
+
+- Install the **Hoppscotch browser extension**, which proxies the request outside the page's
+  origin, and add your `https://doc-ai.*.azurecontainerapps.io` host to its allowed list.
+- Or use the **Hoppscotch desktop app**, which is not a browser page and is not subject to CORS at
+  all.
+
+If a call fails in Hoppscotch but the same call works in curl, it is this, not the deployment.
+`curl` is the quickest way to tell the two apart, which is why it is worth trying first.
+
+---
+
 ## Smoke-testing the image locally
 
 Worth doing before a deployment rather than after it: the same image, the same profiles and the
@@ -555,16 +709,27 @@ need `az ad app delete` (see [Undoing it](#undoing-it)).
 
 ## Order to do things in
 
+All of it is done. Kept as the order to repeat it in, on a fresh subscription or after a teardown:
+
 ```
 [x] 1. Create the Entra app registrations and the DocAi.Process role, grant admin consent
-[x] 2. Fix Docker: `docker context use default`, then join the `docker` group
-[x] 3. Build the image and smoke-test it locally against live Entra
-[ ] 4. Add ANTHROPIC_API_KEY to ~/.config/docai/deploy.env
-[ ] 5. ./deploy/deploy.sh rg-docai-test   (prefix with `sg docker -c` until you re-login)
-[ ] 6. Check the revision is running and read the logs
-[ ] 7. Call the endpoints from curl or Hoppscotch
-[ ] 8. az group delete when the experiment is over
+[x] 2. Fix Docker: join the `docker` group, and know which daemon you are talking to
+[x] 3. Add ANTHROPIC_API_KEY to ~/.config/docai/deploy.env
+[x] 4. Build the image and smoke-test it locally against live Entra
+[x] 5. ./deploy/deploy.sh rg-docai-test   (prefix with `sg docker -c` until you re-login)
+[x] 6. Check the revision is Running and Healthy, and read the logs
+[x] 7. Call the endpoints from curl or Hoppscotch
+[ ] 8. az group delete when you are done, because step 5 is what starts the bill
 ```
 
-Step 4 is a credential only you have. Step 5 is the first step that creates anything billable;
-everything above it is free and reversible.
+Steps 1 to 4 are free and reversible. Step 5 is the first one that creates anything billable, and
+step 8 is the undo.
+
+## What it is costing right now
+
+Three resources bill: the registry, one always-on replica, and log ingest. It is a small amount
+per day rather than per month, but it is continuous, because `minReplicas: 1` is deliberate — a
+scale-to-zero cold start would land a JVM boot in front of a waiting caller. If you are not using
+it for a while, `az group delete -n rg-docai-test --yes --no-wait` costs nothing to undo later:
+re-running `deploy.sh` rebuilds all of it, and the Entra registrations survive a group delete
+because they are directory objects.

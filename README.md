@@ -1,10 +1,15 @@
 # doc-ai
 
-Internal REST service that classifies and extracts data from scanned documents using a vision
-LLM. It replaces the natif.ai workflows the ibosNG backend calls today.
+REST service that classifies and extracts data from scanned documents using a vision LLM.
 
-Four stateless, synchronous endpoints. Orchestration stays with the caller: ibosNG classifies
-first, then calls the matching extraction endpoint.
+> **This is a private learning project.** One operator, no other caller, nothing in production.
+> The service, the SPEC and the German domain vocabulary are written as a realistic brief — a
+> replacement for natif.ai workflows called by an ibosNG backend — because building against a
+> realistic brief is the exercise. That integration does not exist and is not planned. Where the
+> documentation says "the caller", read "you, from curl or Hoppscotch".
+
+Four stateless, synchronous endpoints. Orchestration stays with the caller: classify first, then
+call the matching extraction endpoint.
 
 | # | Endpoint | Purpose |
 |---|----------|---------|
@@ -153,9 +158,9 @@ application; it is deployment only.
 |------|-----------------|
 | `deploy/infra.bicep` | Container registry, Container Apps environment (**internal** ingress), user-assigned identity with `AcrPull`, Log Analytics workspace |
 | `deploy/app.bicep` | The container app: image, probes, scaling, environment, the API key as a secret |
-| `deploy/infra.parameters.json` | Names, region, network addresses |
+| `deploy/infra.parameters.json` | Names, region, log retention |
 | `deploy/deploy.sh` | Applies both, with the image build in between |
-| `deploy/README.md` | Step-by-step guide: what the CLI does, what gets created, what is still missing |
+| `deploy/README.md` | Step-by-step guide: what the CLI does, what gets created, and how to call the deployed endpoints |
 
 New to the Azure CLI, or picking this up cold: read **`deploy/README.md`** rather than this
 section. It covers the resource model, the difference between `validate`, `what-if` and
