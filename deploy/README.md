@@ -491,7 +491,7 @@ the claims the service will actually validate:
 
 ```bash
 . ~/.config/docai/client-test.env
-TOKEN=$(curl -s -X POST \
+TOKEN=$(curl -sS -X POST \
   "https://login.microsoftonline.com/$DOCAI_TEST_TENANT/oauth2/v2.0/token" \
   -d grant_type=client_credentials -d client_id="$DOCAI_TEST_CLIENT_ID" \
   -d client_secret="$DOCAI_TEST_CLIENT_SECRET" \
@@ -536,7 +536,7 @@ URL="https://$(az containerapp show -g rg-docai-test -n doc-ai \
 ### Health, which needs no token
 
 ```bash
-curl -s $URL/actuator/health
+curl -sS $URL/actuator/health
 # {"status":"UP","groups":["liveness","readiness"]}
 ```
 
@@ -550,7 +550,7 @@ with a malformed one, every call is `401`:
 
 ```bash
 . ~/.config/docai/client-test.env
-TOKEN=$(curl -s -X POST \
+TOKEN=$(curl -sS -X POST \
   "https://login.microsoftonline.com/$DOCAI_TEST_TENANT/oauth2/v2.0/token" \
   -d grant_type=client_credentials -d client_id="$DOCAI_TEST_CLIENT_ID" \
   -d client_secret="$DOCAI_TEST_CLIENT_SECRET" \
@@ -560,29 +560,43 @@ TOKEN=$(curl -s -X POST \
 The token lasts about an hour. Mint a new one when calls start coming back `401` after having
 worked — that is the usual cause, not a broken deployment.
 
+Reading the status codes saves time here, because two of them mean "nothing reached the service":
+
+| Code | Meaning |
+|---|---|
+| `000` | No request was sent at all — a local problem, usually an unresolvable file path. Re-run with `-sS` to see which |
+| `401` | It reached the service; the token is missing, malformed or expired |
+| `400` `missing-file` | It arrived, but the part was not named `file` |
+
 ### The four endpoints
 
 **The file part is named `file`.** Sending it under any other name gives a `400` with
 `missing-file`, which reads like the service is broken when it is only a typo.
 
+**Use `-sS`, not `-s`.** The capital `S` keeps curl's own errors visible while still hiding the
+progress meter. With plain `-s`, a fixture path that does not resolve from your current directory
+prints nothing but `HTTP 000` — no request was ever sent, and curl's explanation
+(`Failed to open/read local data`) is suppressed. The paths below are relative, so `cd` first or
+make them absolute.
+
 ```bash
 cd src/test/resources/fixtures
 
 # 1 - classification
-curl -s -H "Authorization: Bearer $TOKEN" -F file=@krankenstand.pdf \
+curl -sS -H "Authorization: Bearer $TOKEN" -F file=@krankenstand.pdf \
      $URL/api/v1/klassifikation
 
 # 2 - Krankenstand, with the optional Teilnehmer hints
-curl -s -H "Authorization: Bearer $TOKEN" -F file=@krankenstand.pdf \
+curl -sS -H "Authorization: Bearer $TOKEN" -F file=@krankenstand.pdf \
      -F vorname=Max -F familienname=Mustermann -F "svnr=1238 010190" \
      $URL/api/v1/extraktion/krankenstand
 
 # 3 - Zeitbestaetigung
-curl -s -H "Authorization: Bearer $TOKEN" -F file=@zeitbestaetigung.pdf \
+curl -sS -H "Authorization: Bearer $TOKEN" -F file=@zeitbestaetigung.pdf \
      $URL/api/v1/extraktion/zeitbestaetigung
 
 # 4 - Kompetenzprofil
-curl -s -H "Authorization: Bearer $TOKEN" -F file=@kompetenzprofil.pdf \
+curl -sS -H "Authorization: Bearer $TOKEN" -F file=@kompetenzprofil.pdf \
      $URL/api/v1/extraktion/kompetenzprofil
 ```
 
