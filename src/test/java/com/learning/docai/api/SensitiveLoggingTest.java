@@ -73,7 +73,7 @@ class SensitiveLoggingTest {
     private static final String SVNR = "1237010180";
     private static final String ADRESSE = "Geheimgasse 7, 9999 Verschwiegen";
 
-    /** Hints from ibosNG, which are just as sensitive and deliberately differ from the above. */
+    /** Hints from the caller, which are just as sensitive and deliberately differ from the above. */
     private static final String HINWEIS_VORNAME = "Hinweisvorname";
     private static final String HINWEIS_FAMILIENNAME = "Hinweisfamilienname";
     private static final String HINWEIS_SVNR = "4568150392";

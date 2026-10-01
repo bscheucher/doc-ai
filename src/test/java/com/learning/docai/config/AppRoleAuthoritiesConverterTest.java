@@ -43,7 +43,7 @@ class AppRoleAuthoritiesConverterTest {
                 .header("alg", "RS256")
                 .issuedAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(300))
-                .subject("ibosng-backend");
+                .subject("caller-backend");
         claims.forEach(builder::claim);
         return builder.build();
     }

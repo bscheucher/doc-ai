@@ -1,7 +1,11 @@
 # CLAUDE.md – doc-ai
 
 Internal REST service that classifies and extracts data from scanned documents using a
-vision LLM. It replaces the natif.ai workflows currently called from the ibosNG backend.
+vision LLM, replacing the natif.ai workflows a calling backend uses today.
+
+Private learning project: one operator, no real consumer, nothing in production. The SPEC is
+written as a realistic brief because that is the exercise - see the note at the top of it. The
+contracts are meant literally; only the consumer is imagined.
 
 Read these before writing code:
 - `src/docs/doc-ai-specs/docs/SPEC.md` – what to build (endpoints, contracts, validation rules). Source of truth.

@@ -8,11 +8,12 @@ end to end with real documents — go straight to
 [Calling the endpoints](#calling-the-endpoints) for commands that have been run as written.
 
 **What this is.** doc-ai is a **private learning project** with a single operator and no other
-caller. The SPEC is written in the register of work software — it names ibosNG as the caller, and
-German domain terms throughout — but nothing else consumes this service, and this deployment
-exists so that one person can exercise the API from `curl` and a browser API client such as
-Hoppscotch. Read every "the caller" in this guide as "you, from your laptop". No integration with
-any other system is planned here, and no decision below should be weighed against one.
+caller. The SPEC is written in the register of work software — a brief for an internal service
+with a calling backend, German domain terms throughout — because building against a realistic
+brief is the exercise. Nothing else consumes this service, and this deployment exists so that one
+person can exercise the API from `curl` and a browser API client such as Hoppscotch. Read every
+"the caller" in this guide as "you, from your laptop". No integration with any other system is
+planned here, and no decision below should be weighed against one.
 
 That is why ingress is **public**. An earlier version of these templates put the app on a VNet
 with internal-only ingress, which is the right shape for a service another system calls from

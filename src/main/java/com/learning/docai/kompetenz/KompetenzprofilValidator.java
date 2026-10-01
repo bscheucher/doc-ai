@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * The rules of SPEC §4.4 on top of the shared ones. Two deliberate differences to endpoints
- * 2 and 3: ibosNG passes no participant hints here (SPEC §3), so no name is compared, and the
+ * 2 and 3: the caller passes no participant hints here (SPEC §3), so no name is compared, and the
  * only date on the document is the date of birth, which the window of §4.1 would always flag.
  */
 @RequiredArgsConstructor
