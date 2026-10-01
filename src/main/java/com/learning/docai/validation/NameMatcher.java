@@ -4,7 +4,7 @@ import java.text.Normalizer;
 import java.util.Locale;
 
 /**
- * Name comparison per SPEC §4.6. Scanned documents and the ibosNG record disagree about
+ * Name comparison per SPEC §4.6. Scanned documents and the caller's record disagree about
  * diacritics, hyphens and double names far more often than about who the person is, so the
  * comparison is deliberately forgiving: it only has to be good enough to decide whether a
  * reviewer needs to look.

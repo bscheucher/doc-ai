@@ -1,0 +1,85 @@
+# Compile and test on every push and pull request, and check the deployment templates.
+#
+# No secrets are needed and none are used. The real-model tests are tagged `llm` and excluded by
+# default in build.gradle.kts, so a plain `./gradlew build` makes no API calls: nothing here needs
+# ANTHROPIC_API_KEY, and `-PincludeLlmTests` must never be added to this workflow.
+
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+# A new push to the same branch makes an in-flight run pointless.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: compile and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - run: ./gradlew build --no-daemon
+
+      # The HTML report says which test failed and why; the log often only says that one did.
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: build/reports/tests/test
+          retention-days: 7
+
+  deploy-templates:
+    name: deployment templates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Both are local operations: Bicep compiles to ARM JSON on this machine and needs no
+      # subscription, no login and no credentials. It catches a broken template here rather than
+      # several minutes into a deployment.
+      - name: az bicep build
+        run: |
+          az bicep build --file deploy/infra.bicep --stdout > /dev/null
+          az bicep build --file deploy/app.bicep   --stdout > /dev/null
+
+      - name: az bicep lint
+        run: |
+          az bicep lint --file deploy/infra.bicep
+          az bicep lint --file deploy/app.bicep
+
+      # deploy.sh is not exercised by any test, so a syntax error in it would otherwise only
+      # surface when someone runs a deployment.
+      - name: bash syntax
+        run: bash -n deploy/deploy.sh
+
+      # The parameters file must not name a parameter the template does not declare, which is the
+      # easy way to break a deployment while both files look correct on their own.
+      - name: parameters match the template
+        run: |
+          params=$(jq -r '.parameters | keys[]' deploy/infra.parameters.json | sort)
+          declared=$(az bicep build --file deploy/infra.bicep --stdout \
+                       | jq -r '.parameters | keys[]' | sort)
+          undefined=$(comm -23 <(echo "$params") <(echo "$declared"))
+          if [ -n "$undefined" ]; then
+            echo "::error::infra.parameters.json sets parameters infra.bicep does not declare:"
+            echo "$undefined"
+            exit 1
+          fi
+          echo "all parameters in infra.parameters.json are declared by infra.bicep"

@@ -35,7 +35,7 @@ import com.learning.docai.krankenstand.KrankenstandDaten;
 import com.learning.docai.zeitbestaetigung.ZeitbestaetigungDaten;
 
 /**
- * The envelope of SPEC §3.1 as ibosNG actually receives it. The MockMvc tests build their own
+ * The envelope of SPEC §3.1 as a caller actually receives it. The MockMvc tests build their own
  * converters, so only a real server settles how a LocalDate reaches the caller - Jackson
  * writes it as [2026,3,15] unless it is configured otherwise, and that is a contract question,
  * not a test detail.

@@ -33,7 +33,7 @@ public class OpenApiConfig {
                         .description("""
                                 Klassifiziert und extrahiert Daten aus eingescannten Dokumenten \
                                 (Krankenstandsbestaetigung, Zeitbestaetigung, AMS-Kompetenzprofil). \
-                                Ersetzt die natif.ai-Workflows des ibosNG-Backends.
+                                Ersetzt die natif.ai-Workflows des aufrufenden Backends.
 
                                 Jeder Aufruf ist zustandslos und synchron: das Dokument wird im \
                                 Speicher verarbeitet und nie gespeichert. Fehlende Felder sind \

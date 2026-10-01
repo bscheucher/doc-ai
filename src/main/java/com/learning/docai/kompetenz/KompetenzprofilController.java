@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Endpoint 4 (SPEC §3.5). Only the file: ibosNG passes no participant hints for a
+ * Endpoint 4 (SPEC §3.5). Only the file: the caller passes no participant hints for a
  * Kompetenzprofil, so there is nothing to compare a name or an SVNR against.
  */
 @Tag(name = "4 Kompetenzprofil",

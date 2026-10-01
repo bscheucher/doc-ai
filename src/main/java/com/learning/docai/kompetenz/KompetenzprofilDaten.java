@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
  * to the model as the JSON schema, so they are instructions, not documentation for us.
  *
  * <p>Note {@code nachname} rather than {@code familienname}: SPEC §3.5 names the field that
- * way, as natif did, and the contract is what ibosNG parses.
+ * way, as natif did, and the contract is what the caller parses.
  */
 public record KompetenzprofilDaten(
 

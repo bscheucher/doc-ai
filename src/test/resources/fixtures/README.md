@@ -41,7 +41,7 @@ cd src/test/resources/fixtures
 # Endpoint 1 - classification
 curl -s -F "file=@krankenstand.pdf" localhost:8080/api/v1/klassifikation
 
-# Endpoint 2 - Krankenstand, with the Teilnehmer hints ibosNG would send
+# Endpoint 2 - Krankenstand, with the Teilnehmer hints a caller would send
 curl -s -F "file=@krankenstand.pdf" \
      -F "vorname=Max" -F "familienname=Mustermann" -F "svnr=1238 010190" \
      localhost:8080/api/v1/extraktion/krankenstand

@@ -34,7 +34,7 @@ class AudienceValidatorTest {
 
     @Test
     void rejectsATokenForAnotherApi() {
-        OAuth2TokenValidatorResult result = validator.validate(token(List.of("api://ibosng")));
+        OAuth2TokenValidatorResult result = validator.validate(token(List.of("api://another-api")));
 
         assertThat(result.hasErrors()).isTrue();
         assertThat(result.getErrors()).extracting(OAuth2Error::getErrorCode)
@@ -51,7 +51,7 @@ class AudienceValidatorTest {
                 .header("alg", "RS256")
                 .issuedAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(300))
-                .subject("ibosng-backend");
+                .subject("caller-backend");
         if (audience != null) {
             builder.audience(audience);
         }

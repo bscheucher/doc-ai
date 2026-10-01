@@ -1,6 +1,30 @@
 # doc-ai – Specification
 
-Status: draft v0.1 · Owner: Bernhard · Consumers: ibosNG backend (TN-Portal upload flow, Kompetenzprofile)
+Status: draft v0.1 · Owner: Bernhard · Consumers: none in production — see the note below
+
+> **This is a private learning project.** One operator, no other consumer, nothing in production.
+> This document is written as a realistic brief — an internal service replacing natif.ai workflows
+> for an ibosNG backend, with the domain vocabulary kept in German — because specifying and
+> building against a realistic brief is the exercise. That integration does not exist and is not
+> planned.
+>
+> So wherever this document says "the caller", "the calling backend" or "the consumer", read it as
+> the hypothetical caller the contract is designed for, not a system that will connect. The
+> contracts, validation rules and field mappings are meant literally and are implemented as
+> written; only the consumer is imagined. In practice the caller is `curl` or Hoppscotch from the
+> author's laptop against the deployed service — `deploy/README.md` has the commands.
+>
+> Two consequences worth naming where they bite:
+>
+> - **§13 Q1** asks whether Entra authentication is wanted from the start or whether network
+>   isolation is enough for v1. Answered in the deployment as: authentication, from the start, and
+>   no isolation. The deployed service has **public** ingress, because isolation would only lock
+>   out the one person who needs in. §7 is implemented exactly as written and is the only barrier —
+>   every `/api/**` call needs a token carrying `DocAi.Process` — with the client-credentials flow
+>   it describes coming from a test app registration rather than another system.
+> - **§13 Q4** asks which remaining natif AMS fields the consumer actually uses. There is no
+>   consumer to ask, so it cannot be closed from inside the project; treat the field set as the
+>   author's choice rather than a requirement.
 
 ## 1. Purpose and scope
 
@@ -16,8 +40,8 @@ It exposes four stateless, synchronous endpoints:
 | 3 | `POST /api/v1/extraktion/zeitbestaetigung` | Zeitbestätigungen | Extract data from an excuse note / appointment confirmation |
 | 4 | `POST /api/v1/extraktion/kompetenzprofil` | AMS | Extract competencies and scores from a Kompetenzprofil |
 
-**Orchestration stays with the caller.** As today with natif, the ibosNG backend calls (1),
-then calls (2) or (3) depending on the result. doc-ai does not chain calls itself.
+**Orchestration stays with the caller.** As today with natif, the calling backend calls (1), then
+calls (2) or (3) depending on the result. doc-ai does not chain calls itself.
 
 Out of scope: storing documents or results, bounding boxes / OCR output, per-field confidence
 scores, UI, asynchronous processing.
@@ -50,7 +74,7 @@ Multipart parts:
 | Part | Endpoints | Required | Notes |
 |------|-----------|----------|-------|
 | `file` | all | yes | PDF, PNG or JPEG, max 20 MB |
-| `vorname` | 2, 3 | no | Participant hint from ibosNG, used for validation only |
+| `vorname` | 2, 3 | no | Participant hint from the caller, used for validation only |
 | `familienname` | 2, 3 | no | " |
 | `svnr` | 2 | no | " ; whitespace allowed |
 
@@ -261,7 +285,7 @@ Extraction with missing fields is **not** an error: 200 with null fields and iss
 
 ## 7. Security and data protection
 
-- OAuth2 resource server, JWT from Azure Entra ID (client-credentials flow from ibosNG backend).
+- OAuth2 resource server, JWT from Azure Entra ID (client-credentials flow from the calling backend).
   Config: `spring.security.oauth2.resourceserver.jwt.issuer-uri`,
   `spring.security.oauth2.resourceserver.jwt.audiences` (expected audience(s)), required app
   role `DocAi.Process` in `docai.security.required-role`. All `/api/**` require it. Actuator
@@ -366,8 +390,12 @@ match columns. `eval/` is git-ignored.
 
 ## 13. Open questions
 
-- Q1: Is authentication via Entra ID wanted from the start, or is network isolation enough for v1?
+- Q1: Is authentication via Entra ID wanted from the start, or is network isolation enough for
+  v1? Answered by the deployment: authentication from the start, and no isolation — the deployed
+  service has public ingress, because isolation would lock out its only caller.
 - Q2: Hosted model vs. local-only – pending data protection.
 - Q3: Should endpoint 1 also recognise `KOMPETENZPROFIL` (for misrouted uploads)?
-- Q4: Which remaining natif AMS fields (§3.5) does ibosNG actually use?
+- Q4: Which remaining natif AMS fields (§3.5) does the consumer actually use? Open by
+  construction: there is no consumer to ask (see the note at the top), so the field set is a
+  choice rather than a requirement.
 - Q5: Path naming – German (`/extraktion/krankenstand`) as drafted, or English?

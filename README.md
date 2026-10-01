@@ -1,10 +1,15 @@
 # doc-ai
 
-Internal REST service that classifies and extracts data from scanned documents using a vision
-LLM. It replaces the natif.ai workflows the ibosNG backend calls today.
+REST service that classifies and extracts data from scanned documents using a vision LLM.
 
-Four stateless, synchronous endpoints. Orchestration stays with the caller: ibosNG classifies
-first, then calls the matching extraction endpoint.
+> **This is a private learning project.** One operator, no other caller, nothing in production.
+> The service, the SPEC and the German domain vocabulary are written as a realistic brief — a
+> replacement for natif.ai workflows called by an ibosNG backend — because building against a
+> realistic brief is the exercise. That integration does not exist and is not planned. Where the
+> documentation says "the caller", read "you, from curl or Hoppscotch".
+
+Four stateless, synchronous endpoints. Orchestration stays with the caller: classify first, then
+call the matching extraction endpoint.
 
 | # | Endpoint | Purpose |
 |---|----------|---------|
@@ -15,6 +20,10 @@ first, then calls the matching extraction endpoint.
 
 Contracts, validation rules and error catalogue: `src/docs/doc-ai-specs/docs/SPEC.md`. It is the
 source of truth; this file only says how to run the thing.
+
+**To call the deployed service**, with curl or from [hoppscotch.io](https://hoppscotch.io):
+`src/docs/CALLING_THE_API.md`. Tested commands, real responses, and the two traps worth knowing in
+advance — the multipart part is named `file`, and a browser tab cannot reach the API at all.
 
 **Nothing is persisted.** Documents and extracted values are processed in memory, never written
 to disk and never cached. Krankenstandsbestätigungen are health data (GDPR Art. 9): the hosted
@@ -48,7 +57,7 @@ One model provider per profile (SPEC §8); business code never names a provider.
 | Profile | Model | Needs |
 |---------|-------|-------|
 | `anthropic` (default) | `claude-sonnet-5` | `ANTHROPIC_API_KEY` |
-| `ollama` | `qwen2.5vl:7b` | Ollama at `OLLAMA_BASE_URL`, default `http://localhost:11434` |
+| `ollama` | `gemma3:4b` | Ollama at `OLLAMA_BASE_URL`, default `http://localhost:11434` |
 | `local` | – | nothing; disables authentication, never together with `prod` |
 | `prod` | – | disables the Swagger UI |
 | `eval` | – | no web server; see below |
@@ -143,6 +152,78 @@ fields it names are compared — a reference that fixes two dates asks about tho
 
 **This calls a real model with whatever is in `eval/input`,** which makes it the one place where
 the data-protection constraint above applies directly.
+
+## Deploy
+
+Azure Container Apps, described by Bicep in `deploy/`. Nothing here is referenced by the
+application; it is deployment only.
+
+| File | What it creates |
+|------|-----------------|
+| `deploy/infra.bicep` | Container registry, Container Apps environment (**internal** ingress), user-assigned identity with `AcrPull`, Log Analytics workspace |
+| `deploy/app.bicep` | The container app: image, probes, scaling, environment, the API key as a secret |
+| `deploy/infra.parameters.json` | Names, region, log retention |
+| `deploy/deploy.sh` | Applies both, with the image build in between |
+| `deploy/README.md` | Step-by-step guide: what the CLI does, what gets created, and how to call the deployed endpoints |
+
+New to the Azure CLI, or picking this up cold: read **`deploy/README.md`** rather than this
+section. It covers the resource model, the difference between `validate`, `what-if` and
+`create`, and the three prerequisites that are not in this repository.
+
+```bash
+az login
+ANTHROPIC_API_KEY=sk-...                                             \
+DOCAI_JWT_ISSUER_URI=https://login.microsoftonline.com/<guid>/v2.0   \
+DOCAI_JWT_AUDIENCE=<api-client-id>                                   \
+  ./deploy/deploy.sh rg-docai-test
+```
+
+The script needs `az`, `jq` and a reachable Docker daemon (the image is built locally by
+buildpacks, as `./gradlew bootBuildImage`). It is idempotent — re-running it applies the
+infrastructure unchanged and adds a revision.
+
+Two templates rather than one because the app cannot be created before its image exists and the
+image cannot be pushed before the registry does: `deploy.sh` applies `infra.bicep`, pushes, then
+applies `app.bicep`.
+
+### What the deployed app runs with
+
+| | |
+|---|---|
+| Profiles | `prod,anthropic` — Swagger UI off (SPEC §10), hosted model (SPEC §8) |
+| CPU / memory | 1.0 / 2.0Gi — PDFBox rasterises up to 5 pages at 150 dpi in memory; the 0.5/1Gi default is too tight |
+| Replicas | 1–5, scaled on 4 concurrent requests, `minReplicas: 1` so no caller waits on a JVM cold start |
+| Probes | `/actuator/health/{liveness,readiness}`, public by `SecurityConfig` because the platform has no token |
+| Image tag | `<version>-<git-sha>`, never `:latest` |
+
+Ingress is **public**. This is a private learning project with one operator and no other caller,
+and the deployment exists so the endpoints can be called from `curl` or a browser API client such
+as Hoppscotch — a private address could not be. There is no VNet and no subnet; the Container Apps
+environment runs on Azure-managed networking. An earlier revision of these templates was
+VNet-injected and internal-only, which is the right shape when another system calls the service
+from inside the same network, and the wrong one here; git history has it.
+
+Authentication is therefore the only barrier, and it is unchanged (SPEC §7): every `/api/**` call
+needs a client-credentials token carrying the `DocAi.Process` app role, and a request without one
+never reaches a controller. `/actuator/health` is open because the platform's probes have no
+token. `/v3/api-docs` stays behind a token and the Swagger UI is off under `prod`.
+
+`deploy/README.md` has the full walkthrough, including how to mint a token and call each
+endpoint.
+
+### Data protection
+
+These templates deploy the `anthropic` profile, which sends page images to the Anthropic API.
+**SPEC §7 permits that for synthetic documents only** until data protection approves it —
+Krankenstandsbestätigungen are GDPR Art. 9 health data, and §13 Q2 is open. The app logs a WARN
+at startup saying so (`HostedModelWarning`). Before real participant documents reach this
+deployment, either that approval exists or the provider has to change.
+
+The API key is a container app secret, taken from the environment by `deploy.sh` and written
+through a `0600` temporary file so it never appears in a command line. For an environment that
+sees real data, give the already-deployed identity (`id-docai-<env>`) `get` on a Key Vault secret
+and replace the `secrets` entry in `app.bicep` with a `keyVaultUrl` reference, so the key is not
+readable from the app's own configuration.
 
 ## Layout
 
