@@ -11,7 +11,11 @@
 set -euo pipefail
 
 RESOURCE_GROUP="${1:-}"
-LOCATION="${LOCATION:-westeurope}"
+# Not westeurope: it is closest to Austria, but "currently not accepting new customers"
+# (RequestDisallowedByAzure) on at least one subscription this was validated against, and the
+# error names every resource rather than the region. germanywestcentral validates and keeps the
+# data in the EU, which matters for where this is going (SPEC §7, GDPR Art. 9).
+LOCATION="${LOCATION:-germanywestcentral}"
 APP_NAME="${APP_NAME:-doc-ai}"
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
