@@ -155,6 +155,11 @@ application; it is deployment only.
 | `deploy/app.bicep` | The container app: image, probes, scaling, environment, the API key as a secret |
 | `deploy/infra.parameters.json` | Names, region, network addresses |
 | `deploy/deploy.sh` | Applies both, with the image build in between |
+| `deploy/README.md` | Step-by-step guide: what the CLI does, what gets created, what is still missing |
+
+New to the Azure CLI, or picking this up cold: read **`deploy/README.md`** rather than this
+section. It covers the resource model, the difference between `validate`, `what-if` and
+`create`, and the three prerequisites that are not in this repository.
 
 ```bash
 az login
