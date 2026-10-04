@@ -327,9 +327,10 @@ metrics is derived from the chat model class, so the `azure-openai` profile repo
 The profiles are not interchangeable. `anthropic` is the profile the endpoints are specified
 against: on the fixtures in `src/test/resources/fixtures/` it extracts every field correctly and
 classifies every document correctly (§12, measured 2026-09-30). `azure-openai` is the default
-because it is the provider meant to run on Azure, not because of a result: it has not yet been
-through §12, and until it clears that close to the `anthropic` result on the same documents,
-`anthropic` stays the reference. The `ollama` profile exists so
+because it is the provider meant to run on Azure, and it has since matched that result on the
+same documents: 29/29 fields, 4/4 classifications and the same validation issues (§12, measured
+2026-10-04 with `gpt-4.1` 2025-04-14). Both results are on the synthetic fixtures only, so they
+show that the model reads these layouts, not how it handles real scans. The `ollama` profile exists so
 that the service can be run and developed without a hosted model - intake, rendering, validation,
 the error paths of §6 and the response envelope are all exercised through it - and not because a
 local model is currently an alternative for extraction.
