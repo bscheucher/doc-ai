@@ -25,6 +25,10 @@ source of truth; this file only says how to run the thing.
 `src/docs/CALLING_THE_API.md`. Tested commands, real responses, and the two traps worth knowing in
 advance — the multipart part is named `file`, and a browser tab cannot reach the API at all.
 
+**Can a local model replace the hosted one?** `src/docs/SELF_HOSTED_MODEL_ON_AZURE.md`. What a
+GPU on Azure would cost and what still blocks it — the deployed region has no GPU, and quota is
+unrequested; the model question itself is still unmeasured.
+
 **Nothing is persisted.** Documents and extracted values are processed in memory, never written
 to disk and never cached. Krankenstandsbestätigungen are health data (GDPR Art. 9): the hosted
 model provider must not see real documents before data protection has approved it, and the
