@@ -4,9 +4,10 @@
 #
 #   ./deploy/deploy.sh rg-docai-test
 #
-# Reads ANTHROPIC_API_KEY, DOCAI_JWT_ISSUER_URI and DOCAI_JWT_AUDIENCE from the environment,
-# falling back to ~/.config/docai/deploy.env (override with DOCAI_ENV_FILE) for whatever the
-# environment does not set. An exported value always wins over the file.
+# Reads DOCAI_JWT_ISSUER_URI and DOCAI_JWT_AUDIENCE from the environment, falling back to
+# ~/.config/docai/deploy.env (override with DOCAI_ENV_FILE) for whatever the environment does not
+# set. An exported value always wins over the file. ANTHROPIC_API_KEY is read the same way but is
+# optional: the default profile is azure-openai, whose key app.bicep reads from the account itself.
 #
 # Idempotent: applies infra.bicep, pushes a new image, applies app.bicep. Re-running it with
 # no code change produces a no-op infrastructure deployment and a new revision of the same app.
@@ -33,11 +34,12 @@ die() { printf '%s\n' "$*" >&2; exit 1; }
 # would put the API key into the environment of every process this user ever starts, where a
 # deployment needs it in one.
 DOCAI_ENV_FILE="${DOCAI_ENV_FILE:-$HOME/.config/docai/deploy.env}"
-docai_vars=(ANTHROPIC_API_KEY DOCAI_JWT_ISSUER_URI DOCAI_JWT_AUDIENCE)
+docai_required=(DOCAI_JWT_ISSUER_URI DOCAI_JWT_AUDIENCE)
+docai_vars=("${docai_required[@]}" ANTHROPIC_API_KEY)
 
 if [[ -r "$DOCAI_ENV_FILE" ]]; then
     needs_file=0
-    for var in "${docai_vars[@]}"; do
+    for var in "${docai_required[@]}"; do
         [[ -n "${!var:-}" ]] || needs_file=1
     done
     if (( needs_file )); then
@@ -59,7 +61,7 @@ fi
 
 # The app refuses to start without these rather than accepting every token in the tenant
 # (SPEC §7). Fail here for the same reason, instead of after a five-minute deployment.
-for var in "${docai_vars[@]}"; do
+for var in "${docai_required[@]}"; do
     [[ -n "${!var:-}" ]] || die "$var is not set, and $DOCAI_ENV_FILE did not supply it. See README 'Configure'."
 done
 
@@ -124,7 +126,7 @@ else
     az group create -n "$RESOURCE_GROUP" -l "$LOCATION" -o none
 fi
 
-echo "==> infrastructure (registry, Container Apps environment, identity)"
+echo "==> infrastructure (registry, Container Apps environment, identity, Azure OpenAI)"
 infra_outputs="$(az deployment group create \
     --resource-group "$RESOURCE_GROUP" \
     --name "docai-infra-$(date +%Y%m%d%H%M%S)" \
@@ -137,6 +139,9 @@ registry_name="$(jq -r .registryName.value <<<"$infra_outputs")"
 registry_server="$(jq -r .registryLoginServer.value <<<"$infra_outputs")"
 environment_id="$(jq -r .environmentId.value <<<"$infra_outputs")"
 identity_id="$(jq -r .identityId.value <<<"$infra_outputs")"
+openai_account="$(jq -r .openAiAccountName.value <<<"$infra_outputs")"
+openai_endpoint="$(jq -r .openAiEndpoint.value <<<"$infra_outputs")"
+openai_deployment="$(jq -r .openAiDeploymentName.value <<<"$infra_outputs")"
 
 image="${registry_server}/doc-ai:${TAG}"
 
@@ -162,7 +167,10 @@ jq -n \
     --arg location "$LOCATION" \
     --arg jwtIssuerUri "$DOCAI_JWT_ISSUER_URI" \
     --arg jwtAudience "$DOCAI_JWT_AUDIENCE" \
-    --arg anthropicApiKey "$ANTHROPIC_API_KEY" \
+    --arg openAiAccountName "$openai_account" \
+    --arg openAiEndpoint "$openai_endpoint" \
+    --arg openAiDeploymentName "$openai_deployment" \
+    --arg anthropicApiKey "${ANTHROPIC_API_KEY:-}" \
     '{
        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
        contentVersion: "1.0.0.0",
@@ -209,8 +217,9 @@ If it did not come up, the platform rather than curl has the reason:
         --query '{running:properties.runningState,healthy:properties.healthState,replicas:properties.replicas}'
     az containerapp logs show -g $RESOURCE_GROUP -n $APP_NAME --revision $revision --tail 50
 
-Expect two WARNs at startup, both expected: HostedModelWarning (profile 'anthropic' with 'prod'
-means page images go to the Anthropic API, which SPEC §7 allows for synthetic documents only),
+Expect two WARNs at startup, both expected: HostedModelWarning (a hosted model profile with
+'prod' - azure-openai by default - means page images leave the service, which SPEC §7 allows for
+synthetic documents only),
 and SpringDoc noting /v3/api-docs is enabled - under 'prod' the Swagger UI is off but the schema
 stays, behind a token (application.yml, SPEC §10).
 EOF

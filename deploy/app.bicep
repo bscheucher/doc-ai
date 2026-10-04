@@ -28,11 +28,12 @@ Spring profiles. `prod` switches the Swagger UI off (SPEC §10); the second entr
 model provider (SPEC §8). Naming any profile replaces spring.profiles.default, so the provider
 has to be named here explicitly.
 
-`anthropic` sends page images to the Anthropic API. SPEC §7 forbids that for real
-Krankenstandsbestätigungen until data protection approves it - this environment is for
-synthetic documents. HostedModelWarning logs a WARN at startup to say so.
+`azure-openai` sends page images to the Azure OpenAI account of infra.bicep, `anthropic` to the
+Anthropic API. Both are hosted, and SPEC §7 forbids either for real Krankenstandsbestätigungen
+until data protection approves it - this environment is for synthetic documents.
+HostedModelWarning logs a WARN at startup to say so.
 ''')
-param springProfilesActive string = 'prod,anthropic'
+param springProfilesActive string = 'prod,azure-openai'
 
 @description('Entra issuer. For v2.0 the tenant GUID, not the domain: https://login.microsoftonline.com/<tenant-guid>/v2.0')
 param jwtIssuerUri string
@@ -40,9 +41,18 @@ param jwtIssuerUri string
 @description('The `aud` this API accepts: the client id of its own app registration.')
 param jwtAudience string
 
-@description('Anthropic API key. Held as a container app secret; see README for the Key Vault alternative.')
+@description('Name of the Azure OpenAI account (infra.bicep output). Its key is read here, with listKeys, so it never passes through deploy.sh or a parameters file.')
+param openAiAccountName string
+
+@description('Endpoint of that account (infra.bicep output).')
+param openAiEndpoint string
+
+@description('Name of the model deployment in that account (infra.bicep output).')
+param openAiDeploymentName string
+
+@description('Anthropic API key. Only needed with the anthropic profile; empty leaves the secret out. Held as a container app secret; see README for the Key Vault alternative.')
 @secure()
-param anthropicApiKey string
+param anthropicApiKey string = ''
 
 @description('Keep at least one replica warm: a JVM cold start would otherwise land on a caller waiting synchronously.')
 @minValue(1)
@@ -66,6 +76,12 @@ param externalIngress bool = true
 
 var port = 8080
 
+resource openAi 'Microsoft.CognitiveServices/accounts@2024-10-01' existing = {
+  name: openAiAccountName
+}
+
+var hasAnthropicKey = !empty(anthropicApiKey)
+
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
   name: appName
   location: location
@@ -88,9 +104,10 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
       registries: [
         { server: registryLoginServer, identity: identityId }
       ]
-      secrets: [
-        { name: 'anthropic-api-key', value: anthropicApiKey }
-      ]
+      secrets: concat(
+        [ { name: 'azure-openai-api-key', value: openAi.listKeys().key1 } ],
+        hasAnthropicKey ? [ { name: 'anthropic-api-key', value: anthropicApiKey } ] : []
+      )
     }
     template: {
       containers: [
@@ -104,12 +121,17 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             cpu: json('1.0')
             memory: '2.0Gi'
           }
-          env: [
-            { name: 'SPRING_PROFILES_ACTIVE', value: springProfilesActive }
-            { name: 'DOCAI_JWT_ISSUER_URI', value: jwtIssuerUri }
-            { name: 'DOCAI_JWT_AUDIENCE', value: jwtAudience }
-            { name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }
-          ]
+          env: concat(
+            [
+              { name: 'SPRING_PROFILES_ACTIVE', value: springProfilesActive }
+              { name: 'DOCAI_JWT_ISSUER_URI', value: jwtIssuerUri }
+              { name: 'DOCAI_JWT_AUDIENCE', value: jwtAudience }
+              { name: 'AZURE_OPENAI_ENDPOINT', value: openAiEndpoint }
+              { name: 'AZURE_OPENAI_DEPLOYMENT', value: openAiDeploymentName }
+              { name: 'AZURE_OPENAI_API_KEY', secretRef: 'azure-openai-api-key' }
+            ],
+            hasAnthropicKey ? [ { name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' } ] : []
+          )
           probes: [
             {
               // Spring Boot's own probes, enabled by management.endpoint.health.probes in

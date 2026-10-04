@@ -27,6 +27,21 @@ param namePrefix string = 'docai'
 @allowed([ 'test', 'stage', 'prod' ])
 param environmentName string = 'test'
 
+@description('''
+Region of the Azure OpenAI account. Not `location`: the subscription has no quota for gpt-4.1 as
+DataZoneStandard or GlobalStandard in any EU region (checked 2026-10-04), and swedencentral is the
+one region with regional Standard quota. A regional deployment processes data in that region only,
+which keeps it in the EU more strictly than a Data Zone would.
+''')
+param openAiLocation string = 'swedencentral'
+
+@description('Name of the gpt-4.1 deployment; the app addresses the model by it (AZURE_OPENAI_DEPLOYMENT).')
+param openAiDeploymentName string = 'gpt-4.1'
+
+@description('Tokens per minute, in thousands. The regional Standard quota in swedencentral is 50.')
+@minValue(1)
+param openAiCapacity int = 50
+
 @description('Retention for the workspace the platform writes container logs to.')
 @minValue(30)
 @maxValue(730)
@@ -97,7 +112,35 @@ resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
+// The model behind the default profile (SPEC §8). First created by hand with `az` on 2026-10-04;
+// the name and every setting here match that account, so applying this adopts it unchanged.
+resource openAi 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
+  name: '${namePrefix}-aoai-${uniqueString(resourceGroup().id)}'
+  location: openAiLocation
+  kind: 'OpenAI'
+  sku: { name: 'S0' }
+  properties: {
+    // Required for key and Entra auth alike; it is also the host name of the endpoint.
+    customSubDomainName: '${namePrefix}-aoai-${uniqueString(resourceGroup().id)}'
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+resource gpt41 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = {
+  parent: openAi
+  name: openAiDeploymentName
+  sku: { name: 'Standard', capacity: openAiCapacity }
+  properties: {
+    model: { format: 'OpenAI', name: 'gpt-4.1', version: '2025-04-14' }
+    versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
+    raiPolicyName: 'Microsoft.DefaultV2'
+  }
+}
+
 output environmentId string = environment.id
 output registryName string = registry.name
 output registryLoginServer string = registry.properties.loginServer
 output identityId string = identity.id
+output openAiAccountName string = openAi.name
+output openAiEndpoint string = openAi.properties.endpoint
+output openAiDeploymentName string = gpt41.name
