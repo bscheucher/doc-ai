@@ -37,6 +37,7 @@ dependencies {
 
     implementation("org.springframework.ai:spring-ai-starter-model-anthropic")
     implementation("org.springframework.ai:spring-ai-starter-model-ollama")
+    implementation("org.springframework.ai:spring-ai-starter-model-azure-openai")
 
     implementation("org.apache.pdfbox:pdfbox:$pdfboxVersion")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")

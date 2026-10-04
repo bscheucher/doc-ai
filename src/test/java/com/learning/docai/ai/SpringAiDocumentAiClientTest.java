@@ -328,6 +328,8 @@ class SpringAiDocumentAiClientTest {
                 org.springframework.ai.anthropic.AnthropicChatModel.class)).isEqualTo("anthropic");
         assertThat(SpringAiDocumentAiClient.providerOf(
                 org.springframework.ai.ollama.OllamaChatModel.class)).isEqualTo("ollama");
+        assertThat(SpringAiDocumentAiClient.providerOf(
+                org.springframework.ai.azure.openai.AzureOpenAiChatModel.class)).isEqualTo("azureopenai");
     }
 
     /** Stand-in for a real extraction record: this test is about the client, not a schema. */

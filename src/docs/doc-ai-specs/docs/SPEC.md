@@ -295,7 +295,9 @@ Extraction with missing fields is **not** an error: 200 with null fields and iss
 - Logging restrictions: see CLAUDE.md "Hard rules".
 - The hosted model provider must not be used with real documents until approved by data
   protection (Krankenstandsbestätigungen are health data, GDPR Art. 9). Add a startup WARN log
-  when the `anthropic` profile is active together with `prod`.
+  when a hosted model profile - `azure-openai` or `anthropic` - is active together with `prod`.
+  An EU Data Zone deployment of Azure OpenAI keeps processing in the EU, which strengthens the
+  case for that approval but does not replace it.
 
 ## 8. Configuration
 
@@ -307,19 +309,27 @@ docai:
 spring.threads.virtual.enabled: true
 ```
 
-Provider profiles (exactly one active), using `spring.ai.model.chat` to select the provider and
-`spring.ai.model.embedding: none`:
+Provider profiles (exactly one active), using `spring.ai.model.chat` to select the provider.
+Only chat is used, so `spring.ai.model.embedding`, `spring.ai.model.image` and
+`spring.ai.model.audio.transcription` are all `none` - the Azure OpenAI starter otherwise claims
+image and audio transcription and refuses to start without an endpoint, in every profile:
 
 | Profile | Provider | Default model | Notes |
 |---------|----------|---------------|-------|
-| `anthropic` (default) | Anthropic API | `claude-sonnet-5` | key via `ANTHROPIC_API_KEY`; max-tokens 4096 |
+| `azure-openai` (default) | Azure OpenAI | `gpt-4.1` | endpoint via `AZURE_OPENAI_ENDPOINT`, key via `AZURE_OPENAI_API_KEY`; the model is addressed by deployment name, `AZURE_OPENAI_DEPLOYMENT`, default `gpt-4.1`, ideally an EU Data Zone deployment; max-tokens 4096; temperature 0 |
+| `anthropic` | Anthropic API | `claude-sonnet-5` | key via `ANTHROPIC_API_KEY`; max-tokens 4096 |
 | `ollama` | local Ollama | `gemma3:4b` | base URL via `OLLAMA_BASE_URL`; `num-ctx: 16384`; wiring only, see below |
 
-Model names are configuration, not code.
+Model names are configuration, not code. The `provider` value in `metadaten` and in the §10
+metrics is derived from the chat model class, so the `azure-openai` profile reports
+`azureopenai`.
 
-The two profiles are not interchangeable. `anthropic` is the profile the endpoints are specified
+The profiles are not interchangeable. `anthropic` is the profile the endpoints are specified
 against: on the fixtures in `src/test/resources/fixtures/` it extracts every field correctly and
-classifies every document correctly (§12, measured 2026-09-30). The `ollama` profile exists so
+classifies every document correctly (§12, measured 2026-09-30). `azure-openai` is the default
+because it is the provider meant to run on Azure, not because of a result: it has not yet been
+through §12, and until it clears that close to the `anthropic` result on the same documents,
+`anthropic` stays the reference. The `ollama` profile exists so
 that the service can be run and developed without a hosted model - intake, rendering, validation,
 the error paths of §6 and the response envelope are all exercised through it - and not because a
 local model is currently an alternative for extraction.
@@ -346,7 +356,8 @@ hosted result on the same documents, and not before. Two constraints for whoever
 ## 9. Dependencies
 
 spring-boot-starter-web, -validation, -actuator, -security, -oauth2-resource-server;
-spring-ai-bom 1.1.x with spring-ai-starter-model-anthropic and spring-ai-starter-model-ollama;
+spring-ai-bom 1.1.x with spring-ai-starter-model-azure-openai, spring-ai-starter-model-anthropic
+and spring-ai-starter-model-ollama;
 org.apache.pdfbox:pdfbox 3.0.x; springdoc-openapi-starter-webmvc-ui (version compatible with
 Boot 3.5); micrometer (via actuator); org.projectlombok:lombok (version from the Boot BOM,
 `compileOnly` + `annotationProcessor`) - `@Slf4j` and `@RequiredArgsConstructor` only, see §10.
