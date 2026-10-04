@@ -36,6 +36,7 @@ Java 21, Spring Boot 3.5.x, Spring AI 1.1.x (not 2.x), Gradle Kotlin DSL, PDFBox
 # DOCAI_JWT_ISSUER_URI and DOCAI_JWT_AUDIENCE, or it fails at startup naming the missing one.
 # 'local' turns authentication off, and naming any profile replaces spring.profiles.default,
 # so the model profile has to be named alongside it:
+./gradlew bootRun --args='--spring.profiles.active=local,azure-openai'   # default; needs AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY
 ./gradlew bootRun --args='--spring.profiles.active=local,anthropic'   # needs ANTHROPIC_API_KEY
 ./gradlew bootRun --args='--spring.profiles.active=local,ollama'
 ```

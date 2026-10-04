@@ -32,12 +32,14 @@ unrequested; the model question itself is still unmeasured.
 **Nothing is persisted.** Documents and extracted values are processed in memory, never written
 to disk and never cached. Krankenstandsbestätigungen are health data (GDPR Art. 9): the hosted
 model provider must not see real documents before data protection has approved it, and the
-service logs a warning at startup when the `anthropic` profile is active together with `prod`.
+service logs a warning at startup when a hosted model profile (`azure-openai` or `anthropic`) is
+active together with `prod`.
 
 ## Run
 
 ```bash
 ./gradlew build                 # compile + all tests
+./gradlew bootRun --args='--spring.profiles.active=local,azure-openai'   # needs AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY
 ./gradlew bootRun --args='--spring.profiles.active=local,anthropic'   # needs ANTHROPIC_API_KEY
 ./gradlew bootRun --args='--spring.profiles.active=local,ollama'      # needs a local Ollama
 ```
@@ -60,7 +62,8 @@ One model provider per profile (SPEC §8); business code never names a provider.
 
 | Profile | Model | Needs |
 |---------|-------|-------|
-| `anthropic` (default) | `claude-sonnet-5` | `ANTHROPIC_API_KEY` |
+| `azure-openai` (default) | `gpt-4.1`, by deployment name | `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`; `AZURE_OPENAI_DEPLOYMENT` if the deployment is not called `gpt-4.1` |
+| `anthropic` | `claude-sonnet-5` | `ANTHROPIC_API_KEY` |
 | `ollama` | `gemma3:4b` | Ollama at `OLLAMA_BASE_URL`, default `http://localhost:11434` |
 | `local` | – | nothing; disables authentication, never together with `prod` |
 | `prod` | – | disables the Swagger UI |

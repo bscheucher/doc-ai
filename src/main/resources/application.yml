@@ -2,7 +2,7 @@ spring:
   application:
     name: doc-ai
   profiles:
-    default: anthropic
+    default: azure-openai
   threads:
     virtual:
       enabled: true
@@ -17,6 +17,12 @@ spring:
   ai:
     model:
       embedding: none
+      # Only chat is used. The Azure OpenAI starter claims image and audio transcription
+      # unless told otherwise, and each of those builds an Azure client that refuses to start
+      # without an endpoint - in every profile, not only azure-openai.
+      image: none
+      audio:
+        transcription: none
   # Resource server per SPEC §7. Empty by default so the 'local' profile needs no tenant; any
   # other profile fails at startup with the name of the missing property.
   security:
@@ -67,6 +73,30 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+---
+# The default profile. Not yet measured with SPEC 12: it is the default because it is the
+# provider meant to run on Azure, not because it has matched anthropic's result on the fixtures.
+spring:
+  config:
+    activate:
+      on-profile: azure-openai
+  ai:
+    model:
+      chat: azure-openai
+    azure:
+      openai:
+        # The resource endpoint, https://<resource>.openai.azure.com/, and one of its keys.
+        endpoint: ${AZURE_OPENAI_ENDPOINT}
+        api-key: ${AZURE_OPENAI_API_KEY}
+        chat:
+          options:
+            # Azure addresses a model by the name of its deployment, not by the model name.
+            # The deployment is expected to run gpt-4.1, ideally as a Data Zone (EU) deployment
+            # so that processing stays in the EU (src/docs/AZURE_ALTERNATIVES.md 2.1).
+            deployment-name: ${AZURE_OPENAI_DEPLOYMENT:gpt-4.1}
+            max-tokens: 4096
+            temperature: 0.0
 
 ---
 spring:

@@ -56,7 +56,7 @@ class ProfileGuardTest {
                 .filteredOn(event -> event.getLevel() == Level.WARN)
                 .extracting(ILoggingEvent::getFormattedMessage)
                 .anySatisfy(meldung -> assertThat(meldung)
-                        .contains("anthropic")
+                        .contains("hosted model")
                         .contains("prod")
                         .contains("Art. 9"));
     }
@@ -64,6 +64,13 @@ class ProfileGuardTest {
     @Test
     void raisesThatWarningWhenTheHostedModelRunsInProd() {
         try (ConfigurableApplicationContext context = start("anthropic", "prod")) {
+            assertThat(context.getBeansOfType(HostedModelWarning.class)).isNotEmpty();
+        }
+    }
+
+    @Test
+    void raisesThatWarningWhenAzureOpenAiRunsInProd() {
+        try (ConfigurableApplicationContext context = start("azure-openai", "prod")) {
             assertThat(context.getBeansOfType(HostedModelWarning.class)).isNotEmpty();
         }
     }
@@ -87,7 +94,9 @@ class ProfileGuardTest {
                         "spring.security.oauth2.resourceserver.jwt.issuer-uri="
                                 + "https://login.microsoftonline.com/t/v2.0",
                         "spring.security.oauth2.resourceserver.jwt.audiences=api://doc-ai-test",
-                        "spring.ai.anthropic.api-key=test-key-not-used")
+                        "spring.ai.anthropic.api-key=test-key-not-used",
+                        "spring.ai.azure.openai.endpoint=https://doc-ai-test.openai.azure.com/",
+                        "spring.ai.azure.openai.api-key=test-key-not-used")
                 .run();
     }
 
