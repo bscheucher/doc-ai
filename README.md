@@ -179,7 +179,6 @@ section. It covers the resource model, the difference between `validate`, `what-
 
 ```bash
 az login
-ANTHROPIC_API_KEY=sk-...                                             \
 DOCAI_JWT_ISSUER_URI=https://login.microsoftonline.com/<guid>/v2.0   \
 DOCAI_JWT_AUDIENCE=<api-client-id>                                   \
   ./deploy/deploy.sh rg-docai-test
@@ -197,7 +196,8 @@ applies `app.bicep`.
 
 | | |
 |---|---|
-| Profiles | `prod,anthropic` — Swagger UI off (SPEC §10), hosted model (SPEC §8) |
+| Profiles | `prod,azure-openai` — Swagger UI off (SPEC §10), hosted model (SPEC §8) |
+| Model | `gpt-4.1` in the Azure OpenAI account of `infra.bicep`, regional Standard in swedencentral |
 | CPU / memory | 1.0 / 2.0Gi — PDFBox rasterises up to 5 pages at 150 dpi in memory; the 0.5/1Gi default is too tight |
 | Replicas | 1–5, scaled on 4 concurrent requests, `minReplicas: 1` so no caller waits on a JVM cold start |
 | Probes | `/actuator/health/{liveness,readiness}`, public by `SecurityConfig` because the platform has no token |
@@ -220,14 +220,18 @@ endpoint.
 
 ### Data protection
 
-These templates deploy the `anthropic` profile, which sends page images to the Anthropic API.
-**SPEC §7 permits that for synthetic documents only** until data protection approves it —
+These templates deploy the `azure-openai` profile, which sends page images to the Azure OpenAI
+account that `infra.bicep` creates. That account is a regional deployment in swedencentral - the
+subscription has no Data Zone quota for gpt-4.1 - so processing stays in the EU, but it is still a
+hosted model. **SPEC §7 permits that for synthetic documents only** until data protection approves it —
 Krankenstandsbestätigungen are GDPR Art. 9 health data, and §13 Q2 is open. The app logs a WARN
 at startup saying so (`HostedModelWarning`). Before real participant documents reach this
 deployment, either that approval exists or the provider has to change.
 
-The API key is a container app secret, taken from the environment by `deploy.sh` and written
-through a `0600` temporary file so it never appears in a command line. For an environment that
+The Azure OpenAI key is a container app secret that `app.bicep` reads from the account itself
+with `listKeys()`, so it never passes through `deploy.sh`, a parameters file or a command line.
+An Anthropic key, for the `anthropic` profile, is optional: `deploy.sh` takes it from the
+environment and writes it through a `0600` temporary file, and leaves the secret out without one. For an environment that
 sees real data, give the already-deployed identity (`id-docai-<env>`) `get` on a Key Vault secret
 and replace the `secrets` entry in `app.bicep` with a `keyVaultUrl` reference, so the key is not
 readable from the app's own configuration.
