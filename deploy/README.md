@@ -245,7 +245,9 @@ required.
 | **User-assigned managed identity** | An identity for the app, with no password. Granted `AcrPull` so it can fetch its own image |
 | **`AcrPull` role assignment** | The grant itself, scoped to this one registry |
 | **Container Apps environment** | The boundary that holds apps: the log destination and the networking. Built with **no** `vnetConfiguration`, which is what lets an app in it carry a public FQDN |
-| **Container app** | The service. Holds the image, env vars, secrets, probes and scaling rules |
+| **Azure OpenAI account** | The model behind the default profile, in **swedencentral** rather than the environment's region: the only region where the subscription has gpt-4.1 quota (regional Standard; no Data Zone quota anywhere in the EU, checked 2026-10-04). Pay per token, nothing standing |
+| **`gpt-4.1` deployment** | Model version 2025-04-14, 50K tokens per minute. The app addresses it by this name |
+| **Container app** | The service. Holds the image, env vars, secrets, probes and scaling rules. Its Azure OpenAI key is read from the account by `listKeys()` in `app.bicep` |
 
 A **managed identity** is worth understanding because it replaces a password. Azure vouches for
 the app's identity directly, so nothing needs storing or rotating. The same identity is the right
@@ -274,12 +276,13 @@ deployment is.
 ./deploy/deploy.sh rg-docai-test
 ```
 
-It needs `ANTHROPIC_API_KEY`, `DOCAI_JWT_ISSUER_URI` and `DOCAI_JWT_AUDIENCE`, and reads them from
+It needs `DOCAI_JWT_ISSUER_URI` and `DOCAI_JWT_AUDIENCE` (and takes `ANTHROPIC_API_KEY` if set,
+for the `anthropic` profile only), and reads them from
 `~/.config/docai/deploy.env` for whatever the environment does not already set — so there is
 nothing to source by hand. An exported value always wins over the file, which is what lets CI
 supply its own secrets; `DOCAI_ENV_FILE=/some/other/env` points it elsewhere.
 
-1. **Checks its inputs.** Reads `~/.config/docai/deploy.env` for any of the three variables the
+1. **Checks its inputs.** Reads `~/.config/docai/deploy.env` for any of the variables the
    environment does not set, then fails immediately if one is still missing, or if `az`, `jq` or
    Docker is unavailable, or if you are not logged in. It fails up front for the same reason the
    service itself refuses to start without an issuer: better than discovering it five minutes in.
@@ -287,7 +290,7 @@ supply its own secrets; `DOCAI_ENV_FILE=/some/other/env` points it elsewhere.
    into the environment of every process you start, where a deployment needs it in one.
 2. **Creates the resource group** if absent.
 3. **Applies `infra.bicep`** and captures its outputs — registry name, login server, environment
-   id, identity id.
+   id, identity id, and the Azure OpenAI account name, endpoint and deployment name.
 4. **Builds the image** with buildpacks, tagged `<version>-<git-sha>`, plus `-dirty` if your
    working tree has uncommitted changes. Never `:latest`, so a running revision always names the
    build it came from.
@@ -325,8 +328,8 @@ az containerapp logs show -g rg-docai-test -n doc-ai --tail 50
 
 Expect **two** WARNs at startup, both expected:
 
-- `HostedModelWarning` — profiles `prod,anthropic` mean page images go to the Anthropic API,
-  which SPEC §7 permits for synthetic documents only.
+- `HostedModelWarning` — profiles `prod,azure-openai` mean page images go to a hosted model (the
+  Azure OpenAI account), which SPEC §7 permits for synthetic documents only.
 - `SpringDocAppInitializer` — `/v3/api-docs` is enabled. Under `prod`, `application.yml` turns the
   Swagger *UI* off and deliberately keeps the schema, which `SecurityConfig` leaves behind a token
   via `anyRequest().authenticated()` (SPEC §10). Nothing to fix.
@@ -343,7 +346,7 @@ Every prerequisite is cleared. For the record, since each of them cost something
 |---|---|
 | Entra app registrations | `doc-ai-api` with the `DocAi.Process` role, `docai-test-client` holding it by an admin-consented grant. See [The Entra app registrations](#the-entra-app-registrations) |
 | A usable Docker daemon | Two unrelated faults, both fixed. See [Docker, and why the usual advice is wrong](#docker-and-why-the-usual-advice-is-wrong) |
-| `ANTHROPIC_API_KEY` | In `~/.config/docai/deploy.env`, which `deploy.sh` reads by itself |
+| A model | The Azure OpenAI account, created by `infra.bicep`; its key is read by `app.bicep`. `ANTHROPIC_API_KEY` in `~/.config/docai/deploy.env` is only needed for the `anthropic` profile |
 | A way to reach the service | Public ingress, verified with curl. See [Calling the endpoints](#calling-the-endpoints) |
 
 The only one you have to think about again is the key, and only if it is rotated. Note that the
@@ -663,10 +666,11 @@ HTTP path works without the real key.
 . ~/.config/docai/deploy.env     # for the issuer and audience; the key here can be a dummy
 # (sourced by hand only because this is a plain docker run, not deploy.sh, which reads it itself)
 docker run -d --name docai-smoke -p 18080:8080 \
-  -e SPRING_PROFILES_ACTIVE=prod,anthropic \
+  -e SPRING_PROFILES_ACTIVE=prod,azure-openai \
   -e DOCAI_JWT_ISSUER_URI="$DOCAI_JWT_ISSUER_URI" \
   -e DOCAI_JWT_AUDIENCE="$DOCAI_JWT_AUDIENCE" \
-  -e ANTHROPIC_API_KEY=sk-ant-dummy-key-never-called \
+  -e AZURE_OPENAI_ENDPOINT=https://dummy.openai.azure.com/ \
+  -e AZURE_OPENAI_API_KEY=dummy-key-never-called \
   docai/doc-ai:0.0.1-SNAPSHOT
 
 curl -s localhost:18080/actuator/health          # {"status":"UP"} in about 5s, no token
@@ -729,7 +733,7 @@ All of it is done. Kept as the order to repeat it in, on a fresh subscription or
 ```
 [x] 1. Create the Entra app registrations and the DocAi.Process role, grant admin consent
 [x] 2. Fix Docker: join the `docker` group, and know which daemon you are talking to
-[x] 3. Add ANTHROPIC_API_KEY to ~/.config/docai/deploy.env
+[x] 3. Nothing for the model: infra.bicep creates the Azure OpenAI account (ANTHROPIC_API_KEY only for the anthropic profile)
 [x] 4. Build the image and smoke-test it locally against live Entra
 [x] 5. ./deploy/deploy.sh rg-docai-test   (prefix with `sg docker -c` until you re-login)
 [x] 6. Check the revision is Running and Healthy, and read the logs
